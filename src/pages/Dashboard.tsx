@@ -17,10 +17,10 @@ import {
   Clock,
   ChevronRight,
   Bell,
-  Wifi,
   Globe,
   Check,
 } from "lucide-react";
+import ahlanLogo from "@/assets/ahlan-logo.png";
 
 const quickActions = [
   { icon: MessageSquare, label: "AI Assistant", path: "/chatbot", color: "bg-primary" },
@@ -140,62 +140,13 @@ const Dashboard = () => {
               </p>
             </div>
 
-            {/* WiFi QR Code */}
-            <div className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-              <div className="flex items-center gap-1.5 text-primary-foreground mb-2">
-                <Wifi className="w-4 h-4" />
-                <span className="text-xs font-medium">WiFi</span>
-              </div>
-              <div className="bg-white rounded-lg p-2">
-                <svg width="64" height="64" viewBox="0 0 64 64" className="text-foreground">
-                  {/* QR Code pattern */}
-                  <rect x="4" y="4" width="16" height="16" fill="currentColor"/>
-                  <rect x="8" y="8" width="8" height="8" fill="white"/>
-                  <rect x="10" y="10" width="4" height="4" fill="currentColor"/>
-                  
-                  <rect x="44" y="4" width="16" height="16" fill="currentColor"/>
-                  <rect x="48" y="8" width="8" height="8" fill="white"/>
-                  <rect x="50" y="10" width="4" height="4" fill="currentColor"/>
-                  
-                  <rect x="4" y="44" width="16" height="16" fill="currentColor"/>
-                  <rect x="8" y="48" width="8" height="8" fill="white"/>
-                  <rect x="10" y="50" width="4" height="4" fill="currentColor"/>
-                  
-                  <rect x="24" y="4" width="4" height="4" fill="currentColor"/>
-                  <rect x="32" y="4" width="4" height="4" fill="currentColor"/>
-                  <rect x="24" y="12" width="4" height="4" fill="currentColor"/>
-                  <rect x="28" y="8" width="4" height="4" fill="currentColor"/>
-                  <rect x="36" y="12" width="4" height="4" fill="currentColor"/>
-                  
-                  <rect x="4" y="24" width="4" height="4" fill="currentColor"/>
-                  <rect x="12" y="28" width="4" height="4" fill="currentColor"/>
-                  <rect x="4" y="32" width="4" height="4" fill="currentColor"/>
-                  <rect x="8" y="36" width="4" height="4" fill="currentColor"/>
-                  
-                  <rect x="24" y="24" width="4" height="4" fill="currentColor"/>
-                  <rect x="32" y="24" width="4" height="4" fill="currentColor"/>
-                  <rect x="28" y="28" width="4" height="4" fill="currentColor"/>
-                  <rect x="24" y="32" width="4" height="4" fill="currentColor"/>
-                  <rect x="36" y="32" width="4" height="4" fill="currentColor"/>
-                  <rect x="32" y="36" width="4" height="4" fill="currentColor"/>
-                  
-                  <rect x="44" y="24" width="4" height="4" fill="currentColor"/>
-                  <rect x="52" y="28" width="4" height="4" fill="currentColor"/>
-                  <rect x="56" y="32" width="4" height="4" fill="currentColor"/>
-                  <rect x="48" y="36" width="4" height="4" fill="currentColor"/>
-                  
-                  <rect x="24" y="44" width="4" height="4" fill="currentColor"/>
-                  <rect x="32" y="48" width="4" height="4" fill="currentColor"/>
-                  <rect x="28" y="52" width="4" height="4" fill="currentColor"/>
-                  <rect x="36" y="56" width="4" height="4" fill="currentColor"/>
-                  
-                  <rect x="44" y="44" width="4" height="4" fill="currentColor"/>
-                  <rect x="52" y="48" width="4" height="4" fill="currentColor"/>
-                  <rect x="48" y="52" width="4" height="4" fill="currentColor"/>
-                  <rect x="56" y="56" width="4" height="4" fill="currentColor"/>
-                </svg>
-              </div>
-              <span className="text-[10px] text-primary-foreground/70 mt-1">Scan to connect</span>
+            {/* Ahlan Logo */}
+            <div className="flex-shrink-0">
+              <img 
+                src={ahlanLogo} 
+                alt="Ahlan" 
+                className="w-20 h-20 lg:w-24 lg:h-24 object-contain rounded-xl"
+              />
             </div>
           </div>
         </div>
