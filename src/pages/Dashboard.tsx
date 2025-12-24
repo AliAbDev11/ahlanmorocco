@@ -45,7 +45,30 @@ const Dashboard = () => {
   const [currentLanguage, setCurrentLanguage] = useState("en");
   const guestData = JSON.parse(localStorage.getItem("hotelGuest") || '{"full_name": "Guest", "room_number": "Suite 405"}');
   
-  const displayName = guestData.full_name || guestData.username || "Guest";
+  // Get display name, preferring full_name, then extracting from email username, then falling back to "Guest"
+  const getDisplayName = () => {
+    if (guestData.full_name) return guestData.full_name;
+    if (guestData.username) {
+      // If username looks like an email, extract the name part and format it
+      if (guestData.username.includes('@')) {
+        const namePart = guestData.username.split('@')[0];
+        // Convert camelCase or remove numbers, capitalize words
+        const formatted = namePart
+          .replace(/[0-9]/g, '')
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/[._-]/g, ' ')
+          .split(' ')
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ')
+          .trim();
+        return formatted || guestData.username;
+      }
+      return guestData.username;
+    }
+    return "Guest";
+  };
+  
+  const displayName = getDisplayName();
   const roomNumber = guestData.room_number || guestData.room || "Suite 405";
 
   return (
