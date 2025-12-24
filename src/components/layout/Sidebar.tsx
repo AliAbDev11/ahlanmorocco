@@ -32,11 +32,6 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const guestData = JSON.parse(localStorage.getItem("hotelGuest") || '{"full_name": "Guest", "room_number": "Suite 405"}');
-  
-  const guestName = guestData.full_name || guestData.username || "Guest";
-  const roomNumber = guestData.room_number || guestData.room || "Suite 405";
-  const initials = guestName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
 
   const handleLogout = () => {
     localStorage.removeItem("hotelGuest");
@@ -49,25 +44,25 @@ const Sidebar = () => {
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "h-screen bg-navy-dark border-r border-navy-light/20 flex flex-col transition-all duration-300",
+        "h-screen bg-card border-r border-border flex flex-col transition-all duration-300",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
       {/* Logo */}
-      <div className="p-6 border-b border-navy-light/20 flex items-center justify-between">
+      <div className="p-6 border-b border-border flex items-center justify-between">
         <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
-          <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
-            <Hotel className="w-5 h-5 text-accent-foreground" />
+          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+            <Hotel className="w-5 h-5 text-accent" />
           </div>
           {!isCollapsed && (
-            <span className="font-serif text-lg text-cream">Grand Azure</span>
+            <span className="font-serif text-lg text-foreground">Grand Azure</span>
           )}
         </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden lg:flex text-cream/60 hover:text-cream hover:bg-navy-light/20"
+          className="hidden lg:flex"
         >
           {isCollapsed ? (
             <ChevronRight className="w-4 h-4" />
@@ -90,11 +85,11 @@ const Sidebar = () => {
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group",
                 isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "text-cream/60 hover:text-cream hover:bg-navy-light/20"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               )}
             >
-              <Icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-accent-foreground")} />
+              <Icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-accent")} />
               {!isCollapsed && <span className="font-medium">{item.label}</span>}
             </NavLink>
           );
@@ -102,24 +97,21 @@ const Sidebar = () => {
       </nav>
 
       {/* User section */}
-      <div className="p-4 border-t border-navy-light/20">
+      <div className="p-4 border-t border-border">
         <div className={cn("flex items-center gap-3 mb-4", isCollapsed && "justify-center")}>
           <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
-            <span className="text-accent font-medium text-sm">{initials}</span>
+            <span className="text-accent font-medium">G</span>
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-cream truncate">{guestName}</p>
-              <p className="text-xs text-cream/60">{roomNumber}</p>
+              <p className="text-sm font-medium text-foreground truncate">Guest</p>
+              <p className="text-xs text-muted-foreground">Suite 405</p>
             </div>
           )}
         </div>
         <Button
           variant="ghost"
-          className={cn(
-            "w-full justify-start text-cream/60 hover:text-cream hover:bg-navy-light/20",
-            isCollapsed && "justify-center"
-          )}
+          className={cn("w-full justify-start text-muted-foreground", isCollapsed && "justify-center")}
           onClick={handleLogout}
         >
           <LogOut className="w-4 h-4" />
