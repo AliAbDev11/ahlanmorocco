@@ -183,12 +183,12 @@ const Chatbot = () => {
   const showQuickSuggestions = messages.length <= 2 && !isTyping;
 
   return (
-    <div className="flex flex-col h-full min-h-[calc(100vh-4rem)] lg:min-h-screen">
-      {/* Header */}
+    <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-screen overflow-hidden">
+      {/* Header - Fixed at top */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-6 border-b border-border bg-card"
+        className="flex-shrink-0 p-6 border-b border-border bg-card"
       >
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
@@ -204,8 +204,8 @@ const Chatbot = () => {
         </div>
       </motion.div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      {/* Messages - Scrollable area */}
+      <div className="flex-1 overflow-y-auto min-h-0 p-6 space-y-4">
         <AnimatePresence>
           {messages.map((message) => (
             <ChatMessage key={message.id} message={message} />
@@ -235,22 +235,26 @@ const Chatbot = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick suggestions */}
+      {/* Quick suggestions - Fixed above input */}
       {showQuickSuggestions && (
-        <QuickSuggestions
-          suggestions={suggestions}
-          onSelect={handleQuickSuggestion}
-        />
+        <div className="flex-shrink-0">
+          <QuickSuggestions
+            suggestions={suggestions}
+            onSelect={handleQuickSuggestion}
+          />
+        </div>
       )}
 
-      {/* Input */}
-      <ChatInput
-        value={inputValue}
-        onChange={setInputValue}
-        onSend={() => handleSend()}
-        onSendAudio={handleSendAudio}
-        disabled={isTyping}
-      />
+      {/* Input - Fixed at bottom */}
+      <div className="flex-shrink-0">
+        <ChatInput
+          value={inputValue}
+          onChange={setInputValue}
+          onSend={() => handleSend()}
+          onSendAudio={handleSendAudio}
+          disabled={isTyping}
+        />
+      </div>
     </div>
   );
 };
