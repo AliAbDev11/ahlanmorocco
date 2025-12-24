@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -6,37 +6,117 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Hotel, Lock, User, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, signUp, isAuthenticated, loading } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, loading, navigate]);
+
+  const validateForm = () => {
+    try {
+      loginSchema.parse({ email, password });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: { email?: string; password?: string } = {};
+        error.errors.forEach((err) => {
+          if (err.path[0] === "email") fieldErrors.email = err.message;
+          if (err.path[0] === "password") fieldErrors.password = err.message;
+        });
+        setErrors(fieldErrors);
+      }
+      return false;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
 
-    // Simulate login - in production, this would validate against a backend
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    if (username && password) {
-      localStorage.setItem("hotelGuest", JSON.stringify({ username, room: "Suite 405" }));
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email, password);
+        if (error) {
+          let message = "Failed to create account. Please try again.";
+          if (error.message.includes("already registered")) {
+            message = "An account with this email already exists. Please sign in instead.";
+          }
+          toast({
+            title: "Sign Up Failed",
+            description: message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Account Created!",
+            description: "Please check your email to confirm your account.",
+          });
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) {
+          let message = "Invalid credentials. Please try again.";
+          if (error.message.includes("Invalid login credentials")) {
+            message = "Invalid email or password. Please check your credentials.";
+          } else if (error.message.includes("Email not confirmed")) {
+            message = "Please confirm your email address before signing in.";
+          }
+          toast({
+            title: "Login Failed",
+            description: message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Welcome!",
+            description: "You have successfully logged in.",
+          });
+          navigate("/onboarding");
+        }
+      }
+    } catch (error) {
       toast({
-        title: "Welcome!",
-        description: "You have successfully logged in.",
-      });
-      navigate("/onboarding");
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Please enter your credentials.",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
+
     setIsLoading(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -121,28 +201,38 @@ const Login = () => {
           </div>
 
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-serif text-foreground mb-2">Welcome Back</h2>
+            <h2 className="text-3xl font-serif text-foreground mb-2">
+              {isSignUp ? "Create Account" : "Welcome Back"}
+            </h2>
             <p className="text-muted-foreground">
-              Enter the credentials provided at check-in
+              {isSignUp 
+                ? "Sign up to access hotel services" 
+                : "Enter your credentials to continue"
+              }
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-foreground font-medium">
-                Username
+              <Label htmlFor="email" className="text-foreground font-medium">
+                Email
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Your room username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="pl-10 h-12 bg-secondary/50 border-border focus:border-accent focus:ring-accent"
+                  id="email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`pl-10 h-12 bg-secondary/50 border-border focus:border-accent focus:ring-accent ${
+                    errors.email ? "border-destructive" : ""
+                  }`}
                 />
               </div>
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -154,12 +244,17 @@ const Login = () => {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Your room password"
+                  placeholder="Your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-12 bg-secondary/50 border-border focus:border-accent focus:ring-accent"
+                  className={`pl-10 h-12 bg-secondary/50 border-border focus:border-accent focus:ring-accent ${
+                    errors.password ? "border-destructive" : ""
+                  }`}
                 />
               </div>
+              {errors.password && (
+                <p className="text-sm text-destructive">{errors.password}</p>
+              )}
             </div>
 
             <Button 
@@ -172,16 +267,32 @@ const Login = () => {
               {isLoading ? (
                 <span className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
-                  Signing in...
+                  {isSignUp ? "Creating Account..." : "Signing in..."}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  Sign In
+                  {isSignUp ? "Create Account" : "Sign In"}
                   <ArrowRight className="w-4 h-4" />
                 </span>
               )}
             </Button>
           </form>
+
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setErrors({});
+              }}
+              className="text-sm text-accent hover:underline"
+            >
+              {isSignUp 
+                ? "Already have an account? Sign in" 
+                : "Don't have an account? Sign up"
+              }
+            </button>
+          </div>
 
           <div className="mt-8 text-center">
             <p className="text-sm text-muted-foreground">
@@ -189,12 +300,6 @@ const Login = () => {
             </p>
             <p className="text-sm text-accent font-medium mt-1">
               +1 (555) 123-4567
-            </p>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-border">
-            <p className="text-xs text-center text-muted-foreground">
-              Demo credentials: Any username/password will work
             </p>
           </div>
         </motion.div>
