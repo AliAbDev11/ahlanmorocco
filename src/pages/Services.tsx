@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,11 +10,8 @@ import {
   Waves,
   Coffee,
   ArrowRight,
-  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 
 const services = [
   {
@@ -78,63 +74,12 @@ const services = [
 
 const Services = () => {
   const { toast } = useToast();
-  const { user, guestProfile } = useAuth();
-  const [loadingService, setLoadingService] = useState<string | null>(null);
 
-  const handleRequest = async (serviceName: string) => {
-    if (!user) {
-      toast({
-        title: "Not authenticated",
-        description: "Please log in to request a service.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoadingService(serviceName);
-
-    const requestData = {
-      guest_id: user.id,
-      room_number: guestProfile?.room_number || "Unknown",
-      service_type: serviceName,
-      description: `${serviceName} service requested`,
-      status: "pending",
-    };
-
-    console.log("Attempting to insert service request:", requestData);
-
-    try {
-      const { data, error } = await supabase
-        .from("service_requests")
-        .insert(requestData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Service request insert failed:", error);
-        toast({
-          title: "Failed to submit request",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log("Service request saved successfully:", data);
-      toast({
-        title: "Service Requested",
-        description: `Your ${serviceName} request has been submitted. We'll contact you shortly.`,
-      });
-    } catch (err) {
-      console.error("Unexpected error submitting request:", err);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingService(null);
-    }
+  const handleRequest = (serviceName: string) => {
+    toast({
+      title: "Service Requested",
+      description: `Your ${serviceName} request has been submitted. We'll contact you shortly.`,
+    });
   };
 
   return (
@@ -179,19 +124,9 @@ const Services = () => {
                 size="sm"
                 className="w-full group-hover:bg-accent group-hover:text-accent-foreground"
                 onClick={() => handleRequest(service.title)}
-                disabled={loadingService === service.title}
               >
-                {loadingService === service.title ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                    Requesting...
-                  </>
-                ) : (
-                  <>
-                    Request
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </>
-                )}
+                Request
+                <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </motion.div>
           );
