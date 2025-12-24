@@ -30,6 +30,7 @@ const Chatbot = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
+  const [lastFailedAudio, setLastFailedAudio] = useState<{ base64: string; format: string; duration: number } | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -49,6 +50,7 @@ const Chatbot = () => {
 
     setHasError(false);
     setLastFailedMessage(null);
+    setLastFailedAudio(null);
 
     const userMessage: Message = {
       id: Date.now(),
@@ -73,7 +75,6 @@ const Chatbot = () => {
 
       setMessages((prev) => [...prev, botResponse]);
 
-      // Update suggestions if provided by n8n
       if (response.suggestions && response.suggestions.length > 0) {
         setSuggestions(response.suggestions);
       }
@@ -101,9 +102,71 @@ const Chatbot = () => {
     }
   };
 
+  const handleSendAudio = async (audioData: { base64: string; format: string; duration: number }) => {
+    setHasError(false);
+    setLastFailedMessage(null);
+    setLastFailedAudio(null);
+
+    const userMessage: Message = {
+      id: Date.now(),
+      text: `Voice message (${Math.floor(audioData.duration / 60)}:${(audioData.duration % 60).toString().padStart(2, '0')})`,
+      isBot: false,
+      timestamp: new Date(),
+      isAudio: true,
+      audioDuration: audioData.duration,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsTyping(true);
+
+    try {
+      const response = await sendMessageToN8N("[Voice Message]", guestData, {
+        audio_data: audioData.base64,
+        audio_format: audioData.format,
+        audio_duration: audioData.duration,
+      });
+
+      const botResponse: Message = {
+        id: Date.now() + 1,
+        text: response.reply,
+        isBot: true,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, botResponse]);
+
+      if (response.suggestions && response.suggestions.length > 0) {
+        setSuggestions(response.suggestions);
+      }
+    } catch (error) {
+      console.error("Audio chat error:", error);
+      setHasError(true);
+      setLastFailedAudio(audioData);
+
+      const errorMessage: Message = {
+        id: Date.now() + 1,
+        text: "Sorry, I couldn't process your voice message. Please try again.",
+        isBot: true,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
+
+      toast({
+        title: "Connection Error",
+        description: "Failed to send voice message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   const handleRetry = () => {
-    if (lastFailedMessage) {
-      // Remove the last error message
+    if (lastFailedAudio) {
+      setMessages((prev) => prev.slice(0, -1));
+      handleSendAudio(lastFailedAudio);
+    } else if (lastFailedMessage) {
       setMessages((prev) => prev.slice(0, -1));
       handleSend(lastFailedMessage);
     }
@@ -181,6 +244,7 @@ const Chatbot = () => {
         value={inputValue}
         onChange={setInputValue}
         onSend={() => handleSend()}
+        onSendAudio={handleSendAudio}
         disabled={isTyping}
       />
     </div>
