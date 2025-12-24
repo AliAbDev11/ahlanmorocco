@@ -49,7 +49,10 @@ const Sidebar = () => {
       )}
     >
       {/* Logo */}
-      <div className="p-6 border-b border-border flex items-center justify-between">
+      <div className={cn(
+        "p-6 border-b border-border",
+        isCollapsed ? "flex flex-col items-center gap-3" : "flex items-center justify-between"
+      )}>
         <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
             <Hotel className="w-5 h-5 text-accent" />
