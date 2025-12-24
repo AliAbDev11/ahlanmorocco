@@ -10,77 +10,75 @@ import {
   Waves,
   Coffee,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useHotelServices } from "@/hooks/useHotelServices";
+import { useServiceRequests } from "@/hooks/useServiceRequests";
+import { LucideIcon } from "lucide-react";
 
-const services = [
-  {
-    icon: UtensilsCrossed,
-    title: "Room Service",
-    description: "24/7 in-room dining from our gourmet kitchen",
-    available: true,
-    color: "bg-accent",
-  },
-  {
-    icon: Sparkles,
-    title: "Housekeeping",
-    description: "Daily cleaning, turndown service, and more",
-    available: true,
-    color: "bg-primary",
-  },
-  {
-    icon: Waves,
-    title: "Spa & Wellness",
-    description: "Massages, facials, and relaxation therapies",
-    available: true,
-    color: "bg-accent",
-  },
-  {
-    icon: Phone,
-    title: "Concierge",
-    description: "Reservations, tickets, and personalized assistance",
-    available: true,
-    color: "bg-primary",
-  },
-  {
-    icon: Shirt,
-    title: "Laundry",
-    description: "Same-day dry cleaning and pressing services",
-    available: true,
-    color: "bg-accent",
-  },
-  {
-    icon: Car,
-    title: "Transportation",
-    description: "Airport transfers and car rental arrangements",
-    available: true,
-    color: "bg-primary",
-  },
-  {
-    icon: Dumbbell,
-    title: "Fitness Center",
-    description: "State-of-the-art gym open 24/7",
-    available: true,
-    color: "bg-accent",
-  },
-  {
-    icon: Coffee,
-    title: "Wake-Up Call",
-    description: "Personalized morning wake-up service",
-    available: true,
-    color: "bg-primary",
-  },
-];
+const iconMap: Record<string, LucideIcon> = {
+  UtensilsCrossed,
+  Sparkles,
+  Car,
+  Shirt,
+  Phone,
+  Dumbbell,
+  Waves,
+  Coffee,
+};
+
+const colorMap: Record<string, string> = {
+  "Room Service": "bg-accent",
+  "Housekeeping": "bg-primary",
+  "Spa & Wellness": "bg-accent",
+  "Concierge": "bg-primary",
+  "Laundry": "bg-accent",
+  "Transportation": "bg-primary",
+  "Fitness Center": "bg-accent",
+  "Wake-Up Call": "bg-primary",
+};
 
 const Services = () => {
   const { toast } = useToast();
+  const { services, loading: servicesLoading, error: servicesError } = useHotelServices();
+  const { createRequest, submitting } = useServiceRequests();
 
-  const handleRequest = (serviceName: string) => {
-    toast({
-      title: "Service Requested",
-      description: `Your ${serviceName} request has been submitted. We'll contact you shortly.`,
+  const handleRequest = async (serviceName: string) => {
+    const { error } = await createRequest({
+      serviceType: serviceName,
+      description: `Request for ${serviceName}`,
     });
+
+    if (error) {
+      toast({
+        title: "Request Failed",
+        description: error,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Service Requested",
+        description: `Your ${serviceName} request has been submitted. We'll contact you shortly.`,
+      });
+    }
   };
+
+  if (servicesLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  if (servicesError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-destructive">Failed to load services. Please try again.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-6 lg:p-8">
@@ -99,39 +97,59 @@ const Services = () => {
       </motion.div>
 
       {/* Services Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {services.map((service, index) => {
-          const Icon = service.icon;
-          return (
-            <motion.div
-              key={service.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="service-card group"
-            >
-              <div className={`w-14 h-14 rounded-xl ${service.color} flex items-center justify-center mb-4`}>
-                <Icon className="w-7 h-7 text-primary-foreground" />
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                {service.title}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                {service.description}
-              </p>
-              <Button
-                variant="gold-outline"
-                size="sm"
-                className="w-full group-hover:bg-accent group-hover:text-accent-foreground"
-                onClick={() => handleRequest(service.title)}
+      {services.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No services available at the moment.</p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {services.map((service, index) => {
+            const Icon = service.icon ? iconMap[service.icon] : Sparkles;
+            const color = colorMap[service.name] || "bg-primary";
+            
+            return (
+              <motion.div
+                key={service.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="service-card group"
               >
-                Request
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </motion.div>
-          );
-        })}
-      </div>
+                <div className={`w-14 h-14 rounded-xl ${color} flex items-center justify-center mb-4`}>
+                  {Icon && <Icon className="w-7 h-7 text-primary-foreground" />}
+                </div>
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  {service.name}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                  {service.description}
+                </p>
+                {service.operating_hours && (
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Hours: {service.operating_hours}
+                  </p>
+                )}
+                <Button
+                  variant="gold-outline"
+                  size="sm"
+                  className="w-full group-hover:bg-accent group-hover:text-accent-foreground"
+                  onClick={() => handleRequest(service.name)}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      Request
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Emergency Contact */}
       <motion.div

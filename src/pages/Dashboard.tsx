@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,8 +19,12 @@ import {
   Bell,
   Globe,
   Check,
+  LogOut,
 } from "lucide-react";
 import ahlanLogo from "@/assets/ahlan-logo.png";
+import { useGuestProfile } from "@/hooks/useGuestProfile";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const quickActions = [
   { icon: MessageSquare, label: "AI Assistant", path: "/chatbot", color: "bg-primary" },
@@ -43,33 +47,57 @@ const languages = [
 const Dashboard = () => {
   const navigate = useNavigate();
   const [currentLanguage, setCurrentLanguage] = useState("en");
-  const guestData = JSON.parse(localStorage.getItem("hotelGuest") || '{"full_name": "Guest", "room_number": "Suite 405"}');
-  
-  // Get display name, preferring full_name, then extracting from email username, then falling back to "Guest"
+  const { guest, loading: guestLoading } = useGuestProfile();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { toast } = useToast();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/login");
+    }
+  }, [user, authLoading, navigate]);
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    } else {
+      navigate("/login");
+    }
+  };
+
+  // Get display name from guest profile or user email
   const getDisplayName = () => {
-    if (guestData.full_name) return guestData.full_name;
-    if (guestData.username) {
-      // If username looks like an email, extract the name part and format it
-      if (guestData.username.includes('@')) {
-        const namePart = guestData.username.split('@')[0];
-        // Convert camelCase or remove numbers, capitalize words
-        const formatted = namePart
-          .replace(/[0-9]/g, '')
-          .replace(/([a-z])([A-Z])/g, '$1 $2')
-          .replace(/[._-]/g, ' ')
-          .split(' ')
-          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-          .join(' ')
-          .trim();
-        return formatted || guestData.username;
-      }
-      return guestData.username;
+    if (guest?.full_name) return guest.full_name;
+    if (user?.email) {
+      const namePart = user.email.split("@")[0];
+      return namePart
+        .replace(/[0-9]/g, "")
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/[._-]/g, " ")
+        .split(" ")
+        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(" ")
+        .trim() || "Guest";
     }
     return "Guest";
   };
-  
+
   const displayName = getDisplayName();
-  const roomNumber = guestData.room_number || guestData.room || "Suite 405";
+  const roomNumber = guest?.room_number || "Not assigned";
+
+  if (authLoading || guestLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-6 lg:p-8">
@@ -125,6 +153,16 @@ const Dashboard = () => {
                 2
               </span>
             </Button>
+
+            {/* Sign Out */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-primary-foreground hover:bg-white/10"
+              onClick={handleSignOut}
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
           </div>
 
           {/* Main header content */}
@@ -136,7 +174,9 @@ const Dashboard = () => {
               </h1>
               <p className="text-primary-foreground/80 flex items-center gap-2 text-sm">
                 <Clock className="w-4 h-4" />
-                {roomNumber} • Check-out: December 28, 2024
+                {roomNumber} • {guest?.check_out_date 
+                  ? `Check-out: ${new Date(guest.check_out_date).toLocaleDateString()}`
+                  : "Welcome to our hotel"}
               </p>
             </div>
 
