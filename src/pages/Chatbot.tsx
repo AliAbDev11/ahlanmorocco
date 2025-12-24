@@ -4,7 +4,7 @@ import { Bot, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useGuestData } from "@/hooks/useGuestData";
-import { sendMessageToN8N } from "@/lib/n8nWebhook";
+import { sendMessageToN8N, sendAudioToN8N } from "@/lib/n8nWebhook";
 import ChatMessage, { Message } from "@/components/chat/ChatMessage";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import ChatInput from "@/components/chat/ChatInput";
@@ -30,6 +30,7 @@ const Chatbot = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
+  const [lastFailedAudio, setLastFailedAudio] = useState<{ blob: Blob; duration: number } | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -49,6 +50,7 @@ const Chatbot = () => {
 
     setHasError(false);
     setLastFailedMessage(null);
+    setLastFailedAudio(null);
 
     const userMessage: Message = {
       id: Date.now(),
@@ -101,11 +103,76 @@ const Chatbot = () => {
     }
   };
 
+  const handleSendAudio = async (audioBlob: Blob, duration: number) => {
+    setHasError(false);
+    setLastFailedMessage(null);
+    setLastFailedAudio(null);
+
+    // Create audio URL for playback
+    const audioUrl = URL.createObjectURL(audioBlob);
+
+    const userMessage: Message = {
+      id: Date.now(),
+      text: "",
+      isBot: false,
+      timestamp: new Date(),
+      isAudio: true,
+      audioUrl,
+      audioDuration: duration,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsTyping(true);
+
+    try {
+      const response = await sendAudioToN8N(audioBlob, duration, guestData);
+
+      const botResponse: Message = {
+        id: Date.now() + 1,
+        text: response.reply,
+        isBot: true,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, botResponse]);
+
+      // Update suggestions if provided by n8n
+      if (response.suggestions && response.suggestions.length > 0) {
+        setSuggestions(response.suggestions);
+      }
+    } catch (error) {
+      console.error("Audio send error:", error);
+      setHasError(true);
+      setLastFailedAudio({ blob: audioBlob, duration });
+
+      const errorMessage: Message = {
+        id: Date.now() + 1,
+        text: "Sorry, I'm having trouble sending your voice message. Please try again.",
+        isBot: true,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
+
+      toast({
+        title: "Connection Error",
+        description: "Failed to send voice message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   const handleRetry = () => {
     if (lastFailedMessage) {
       // Remove the last error message
       setMessages((prev) => prev.slice(0, -1));
       handleSend(lastFailedMessage);
+    } else if (lastFailedAudio) {
+      // Remove the last error message
+      setMessages((prev) => prev.slice(0, -1));
+      handleSendAudio(lastFailedAudio.blob, lastFailedAudio.duration);
     }
   };
 
@@ -147,7 +214,7 @@ const Chatbot = () => {
 
         {isTyping && <TypingIndicator />}
 
-        {hasError && lastFailedMessage && (
+        {hasError && (lastFailedMessage || lastFailedAudio) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -181,6 +248,7 @@ const Chatbot = () => {
         value={inputValue}
         onChange={setInputValue}
         onSend={() => handleSend()}
+        onSendAudio={handleSendAudio}
         disabled={isTyping}
       />
     </div>
