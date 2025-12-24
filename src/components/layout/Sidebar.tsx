@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSidebarContext } from "@/contexts/SidebarContext";
 
 const navItems = [
   { icon: Home, label: "Dashboard", path: "/dashboard" },
@@ -31,7 +31,7 @@ const navItems = [
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed, toggleCollapsed } = useSidebarContext();
 
   const handleLogout = () => {
     localStorage.removeItem("hotelGuest");
@@ -61,7 +61,7 @@ const Sidebar = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={toggleCollapsed}
           className="hidden lg:flex"
         >
           {isCollapsed ? (
