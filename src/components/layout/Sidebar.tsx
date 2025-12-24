@@ -49,7 +49,7 @@ const Sidebar = () => {
       )}
     >
       {/* Logo */}
-      <div className="p-6 border-b border-border flex items-center justify-between">
+      <div className="p-6 border-b border-border">
         <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
             <Hotel className="w-5 h-5 text-accent" />
@@ -60,14 +60,20 @@ const Sidebar = () => {
         </div>
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={toggleCollapsed}
-          className="hidden lg:flex"
+          className={cn(
+            "hidden lg:flex items-center gap-2 mt-4 w-full text-muted-foreground hover:text-foreground",
+            isCollapsed && "justify-center"
+          )}
         >
           {isCollapsed ? (
             <ChevronRight className="w-4 h-4" />
           ) : (
-            <ChevronLeft className="w-4 h-4" />
+            <>
+              <ChevronLeft className="w-4 h-4" />
+              <span className="text-xs">Collapse</span>
+            </>
           )}
         </Button>
       </div>
