@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,8 +21,11 @@ import {
   UtensilsCrossed,
   Wine,
   Cake,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface MenuItem {
   id: number;
@@ -136,7 +138,9 @@ const Menu = () => {
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [specialRequests, setSpecialRequests] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { user, guestProfile } = useAuth();
 
   const filteredItems = menuItems.filter((item) => item.category === activeCategory);
 
@@ -169,16 +173,72 @@ const Menu = () => {
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleSubmitOrder = () => {
-    toast({
-      title: "Order Placed!",
-      description: "Your order has been submitted. Estimated delivery: 30-45 minutes.",
-    });
-    setCart([]);
-    setIsCartOpen(false);
-    setShowOrderForm(false);
-    setSpecialRequests("");
-    setDeliveryTime("");
+  const handleSubmitOrder = async () => {
+    if (!user) {
+      toast({
+        title: "Not authenticated",
+        description: "Please log in to place an order.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    const orderData = {
+      guest_id: user.id,
+      room_number: guestProfile?.room_number || "Unknown",
+      items: cart.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+      total_price: cartTotal,
+      delivery_time: deliveryTime || "asap",
+      special_requests: specialRequests || null,
+      status: "pending",
+    };
+
+    console.log("Attempting to insert order:", orderData);
+
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Order insert failed:", error);
+        toast({
+          title: "Failed to place order",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Order saved successfully:", data);
+      toast({
+        title: "Order Placed!",
+        description: "Your order has been submitted. Estimated delivery: 30-45 minutes.",
+      });
+      setCart([]);
+      setIsCartOpen(false);
+      setShowOrderForm(false);
+      setSpecialRequests("");
+      setDeliveryTime("");
+    } catch (err) {
+      console.error("Unexpected error placing order:", err);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -412,8 +472,16 @@ const Menu = () => {
                       size="lg"
                       className="w-full"
                       onClick={handleSubmitOrder}
+                      disabled={isSubmitting}
                     >
-                      Place Order
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Placing Order...
+                        </>
+                      ) : (
+                        "Place Order"
+                      )}
                     </Button>
                   )}
                 </div>
