@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -17,15 +16,18 @@ import {
   Clock,
   AlertCircle,
   Send,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Request {
-  id: number;
+  id: string;
   category: string;
   description: string;
   urgency: string;
-  status: "pending" | "in-progress" | "resolved";
+  status: "pending" | "in-progress" | "resolved" | "open";
   createdAt: Date;
 }
 
@@ -33,27 +35,53 @@ const Requests = () => {
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [urgency, setUrgency] = useState("");
-  const [requests, setRequests] = useState<Request[]>([
-    {
-      id: 1,
-      category: "Maintenance",
-      description: "Air conditioning not working properly",
-      urgency: "high",
-      status: "in-progress",
-      createdAt: new Date(Date.now() - 3600000),
-    },
-    {
-      id: 2,
-      category: "Housekeeping",
-      description: "Extra towels and pillows requested",
-      urgency: "low",
-      status: "resolved",
-      createdAt: new Date(Date.now() - 86400000),
-    },
-  ]);
+  const [requests, setRequests] = useState<Request[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user, guestProfile } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Fetch existing requests on mount
+  useEffect(() => {
+    if (user) {
+      fetchRequests();
+    }
+  }, [user]);
+
+  const fetchRequests = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("reclamations")
+        .select("*")
+        .eq("guest_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching requests:", error);
+        return;
+      }
+
+      console.log("Fetched requests:", data);
+      setRequests(
+        data.map((r) => ({
+          id: r.id,
+          category: r.category,
+          description: r.description,
+          urgency: r.urgency || "medium",
+          status: r.status as "pending" | "in-progress" | "resolved",
+          createdAt: new Date(r.created_at),
+        }))
+      );
+    } catch (err) {
+      console.error("Error fetching requests:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!category || !description || !urgency) {
@@ -65,24 +93,75 @@ const Requests = () => {
       return;
     }
 
-    const newRequest: Request = {
-      id: requests.length + 1,
+    if (!user) {
+      toast({
+        title: "Not authenticated",
+        description: "Please log in to submit a request.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const requestData = {
+      guest_id: user.id,
+      room_number: guestProfile?.room_number || "Unknown",
       category,
       description,
       urgency,
-      status: "pending",
-      createdAt: new Date(),
+      status: "open",
     };
 
-    setRequests([newRequest, ...requests]);
-    setCategory("");
-    setDescription("");
-    setUrgency("");
+    console.log("Attempting to insert reclamation:", requestData);
 
-    toast({
-      title: "Request Submitted",
-      description: "Your request has been received. We'll address it shortly.",
-    });
+    try {
+      const { data, error } = await supabase
+        .from("reclamations")
+        .insert(requestData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Reclamation insert failed:", error);
+        toast({
+          title: "Failed to submit request",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Reclamation saved successfully:", data);
+      
+      const newRequest: Request = {
+        id: data.id,
+        category: data.category,
+        description: data.description,
+        urgency: data.urgency || "medium",
+        status: "pending",
+        createdAt: new Date(data.created_at),
+      };
+
+      setRequests([newRequest, ...requests]);
+      setCategory("");
+      setDescription("");
+      setUrgency("");
+
+      toast({
+        title: "Request Submitted",
+        description: "Your request has been received. We'll address it shortly.",
+      });
+    } catch (err) {
+      console.error("Unexpected error submitting request:", err);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -206,9 +285,18 @@ const Requests = () => {
                 </Select>
               </div>
 
-              <Button type="submit" variant="gold" size="lg" className="w-full">
-                <Send className="w-4 h-4 mr-2" />
-                Submit Request
+              <Button type="submit" variant="gold" size="lg" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Submit Request
+                  </>
+                )}
               </Button>
             </form>
           </div>
