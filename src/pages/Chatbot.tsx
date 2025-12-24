@@ -62,7 +62,7 @@ const Chatbot = () => {
     setIsTyping(true);
 
     try {
-      const response = await sendMessageToN8N(text);
+      const response = await sendMessageToN8N(text, guestData);
 
       const botResponse: Message = {
         id: Date.now() + 1,

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
@@ -14,7 +14,6 @@ import LocalGuide from "./pages/LocalGuide";
 import Requests from "./pages/Requests";
 import MainLayout from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -26,19 +25,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Login />} />
-          <Route 
-            path="/onboarding" 
-            element={
-              <ProtectedRoute>
-                <Onboarding />
-              </ProtectedRoute>
-            } 
-          />
-          <Route element={
-            <ProtectedRoute>
-              <MainLayout />
-            </ProtectedRoute>
-          }>
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/chatbot" element={<Chatbot />} />
             <Route path="/services" element={<Services />} />

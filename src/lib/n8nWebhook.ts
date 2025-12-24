@@ -1,5 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
+import { GuestData } from "@/hooks/useGuestData";
 
+const N8N_WEBHOOK_URL = "https://teama2.app.n8n.cloud/webhook-test/Ahlan-Assistant";
 const TIMEOUT_MS = 30000;
 
 export interface N8NResponse {
@@ -8,39 +9,49 @@ export interface N8NResponse {
 }
 
 export const sendMessageToN8N = async (
-  messageText: string
+  messageText: string,
+  guestData: GuestData | null
 ): Promise<N8NResponse> => {
-  // Validate message input
-  const sanitizedMessage = messageText.trim().slice(0, 2000);
-  if (!sanitizedMessage) {
-    throw new Error("Message cannot be empty");
-  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-  // Call the authenticated edge function instead of direct webhook
-  const { data, error } = await supabase.functions.invoke("chat-webhook", {
-    body: { message: sanitizedMessage },
-  });
+  try {
+    const response = await fetch(N8N_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        message: messageText,
+        guest_id: guestData?.id || "anonymous",
+        guest_name: guestData?.full_name || "Guest",
+        room_number: guestData?.room_number || "Unknown",
+        timestamp: new Date().toISOString(),
+        message_type: "text",
+      }),
+    });
 
-  if (error) {
-    console.error("Error calling chat webhook:", error);
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Failed to send message: ${response.status}`);
+    }
+
+    const botResponse = await response.json();
     
-    if (error.message?.includes("timeout") || error.message?.includes("504")) {
+    return {
+      reply: botResponse.reply || botResponse.message || botResponse.output || "I'm here to help!",
+      suggestions: botResponse.suggestions,
+    };
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error instanceof Error && error.name === "AbortError") {
       throw new Error("Request timed out. Please try again.");
     }
     
-    if (error.message?.includes("401") || error.message?.includes("Unauthorized")) {
-      throw new Error("Please log in to use the chat.");
-    }
-    
-    throw new Error("Failed to send message. Please try again.");
+    console.error("Error sending to n8n:", error);
+    throw error;
   }
-
-  if (data?.error) {
-    throw new Error(data.error);
-  }
-
-  return {
-    reply: data?.reply || "I'm here to help!",
-    suggestions: data?.suggestions,
-  };
 };

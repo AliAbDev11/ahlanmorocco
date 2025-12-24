@@ -1,4 +1,1 @@
 project_id = "qymmljmfdlotcmizirbf"
-
-[functions.chat-webhook]
-verify_jwt = true
