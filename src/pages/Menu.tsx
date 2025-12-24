@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,123 +21,41 @@ import {
   UtensilsCrossed,
   Wine,
   Cake,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMenuItems } from "@/hooks/useMenuItems";
+import { useOrders } from "@/hooks/useOrders";
+import { Tables } from "@/integrations/supabase/types";
 
-interface MenuItem {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  image: string;
-}
+type MenuItem = Tables<"menu_items">;
 
 interface CartItem extends MenuItem {
   quantity: number;
 }
 
 const categories = [
-  { id: "breakfast", label: "Breakfast", icon: Coffee },
-  { id: "lunch", label: "Lunch", icon: UtensilsCrossed },
-  { id: "dinner", label: "Dinner", icon: UtensilsCrossed },
-  { id: "drinks", label: "Drinks", icon: Wine },
-  { id: "desserts", label: "Desserts", icon: Cake },
-];
-
-const menuItems: MenuItem[] = [
-  {
-    id: 1,
-    name: "Classic Continental Breakfast",
-    description: "Croissants, fresh fruit, yogurt parfait, and artisanal coffee",
-    price: 28,
-    category: "breakfast",
-    image: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=400&h=300&fit=crop",
-  },
-  {
-    id: 2,
-    name: "Eggs Benedict Royale",
-    description: "Poached eggs, smoked salmon, hollandaise on brioche",
-    price: 32,
-    category: "breakfast",
-    image: "https://images.unsplash.com/photo-1608039829572-ee5e15baa9ab?w=400&h=300&fit=crop",
-  },
-  {
-    id: 3,
-    name: "Mediterranean Salad",
-    description: "Mixed greens, feta, olives, cherry tomatoes, lemon vinaigrette",
-    price: 24,
-    category: "lunch",
-    image: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&h=300&fit=crop",
-  },
-  {
-    id: 4,
-    name: "Wagyu Beef Burger",
-    description: "Premium wagyu patty, aged cheddar, truffle aioli, brioche bun",
-    price: 45,
-    category: "lunch",
-    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop",
-  },
-  {
-    id: 5,
-    name: "Pan-Seared Salmon",
-    description: "Atlantic salmon, asparagus, lemon butter sauce, wild rice",
-    price: 52,
-    category: "dinner",
-    image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop",
-  },
-  {
-    id: 6,
-    name: "Filet Mignon",
-    description: "8oz prime beef tenderloin, truffle mash, seasonal vegetables",
-    price: 68,
-    category: "dinner",
-    image: "https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=300&fit=crop",
-  },
-  {
-    id: 7,
-    name: "Signature Cocktail",
-    description: "Our bartender's special creation of the day",
-    price: 18,
-    category: "drinks",
-    image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&h=300&fit=crop",
-  },
-  {
-    id: 8,
-    name: "Premium Wine Selection",
-    description: "Glass of curated red, white, or rosé wine",
-    price: 22,
-    category: "drinks",
-    image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&h=300&fit=crop",
-  },
-  {
-    id: 9,
-    name: "Chocolate Fondant",
-    description: "Warm chocolate cake with molten center, vanilla ice cream",
-    price: 16,
-    category: "desserts",
-    image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=300&fit=crop",
-  },
-  {
-    id: 10,
-    name: "Crème Brûlée",
-    description: "Classic French vanilla custard with caramelized sugar",
-    price: 14,
-    category: "desserts",
-    image: "https://images.unsplash.com/photo-1470124182917-cc6e71b22ecc?w=400&h=300&fit=crop",
-  },
+  { id: "Breakfast", label: "Breakfast", icon: Coffee },
+  { id: "Lunch", label: "Lunch", icon: UtensilsCrossed },
+  { id: "Dinner", label: "Dinner", icon: UtensilsCrossed },
+  { id: "Drinks", label: "Drinks", icon: Wine },
+  { id: "Desserts", label: "Desserts", icon: Cake },
 ];
 
 const Menu = () => {
-  const [activeCategory, setActiveCategory] = useState("breakfast");
+  const [activeCategory, setActiveCategory] = useState("Breakfast");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [specialRequests, setSpecialRequests] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
   const { toast } = useToast();
+  const { menuItems, loading: menuLoading, error: menuError } = useMenuItems();
+  const { createOrder, loading: orderLoading } = useOrders();
 
-  const filteredItems = menuItems.filter((item) => item.category === activeCategory);
+  const filteredItems = menuItems.filter((item) => 
+    item.category.toLowerCase() === activeCategory.toLowerCase()
+  );
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
@@ -156,7 +73,7 @@ const Menu = () => {
     });
   };
 
-  const updateQuantity = (id: number, change: number) => {
+  const updateQuantity = (id: string, change: number) => {
     setCart((prev) => {
       return prev
         .map((item) =>
@@ -169,17 +86,53 @@ const Menu = () => {
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleSubmitOrder = () => {
-    toast({
-      title: "Order Placed!",
-      description: "Your order has been submitted. Estimated delivery: 30-45 minutes.",
+  const handleSubmitOrder = async () => {
+    const { error } = await createOrder({
+      items: cart.map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+      totalPrice: cartTotal,
+      deliveryTime,
+      specialRequests,
     });
-    setCart([]);
-    setIsCartOpen(false);
-    setShowOrderForm(false);
-    setSpecialRequests("");
-    setDeliveryTime("");
+
+    if (error) {
+      toast({
+        title: "Order Failed",
+        description: error,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Order Placed!",
+        description: "Your order has been submitted. Estimated delivery: 30-45 minutes.",
+      });
+      setCart([]);
+      setIsCartOpen(false);
+      setShowOrderForm(false);
+      setSpecialRequests("");
+      setDeliveryTime("");
+    }
   };
+
+  if (menuLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  if (menuError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-destructive">Failed to load menu. Please try again.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-6 lg:p-8 pb-24">
@@ -244,40 +197,48 @@ const Menu = () => {
       </motion.div>
 
       {/* Menu Items */}
-      <div className="grid md:grid-cols-2 gap-4">
-        {filteredItems.map((item, index) => (
-          <motion.div
-            key={item.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + index * 0.05 }}
-            className="menu-item-card flex overflow-hidden"
-          >
-            <img
-              src={item.image}
-              alt={item.name}
-              className="w-32 h-32 object-cover flex-shrink-0"
-            />
-            <div className="flex-1 p-4 flex flex-col">
-              <h3 className="font-medium text-foreground mb-1">{item.name}</h3>
-              <p className="text-sm text-muted-foreground flex-1 line-clamp-2">
-                {item.description}
-              </p>
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-lg font-serif text-accent">${item.price}</span>
-                <Button
-                  variant="gold-outline"
-                  size="sm"
-                  onClick={() => addToCart(item)}
-                >
-                  <Plus className="w-4 h-4" />
-                  Add
-                </Button>
+      {filteredItems.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No items available in this category.</p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-4">
+          {filteredItems.map((item, index) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + index * 0.05 }}
+              className="menu-item-card flex overflow-hidden"
+            >
+              {item.image_url && (
+                <img
+                  src={item.image_url}
+                  alt={item.name}
+                  className="w-32 h-32 object-cover flex-shrink-0"
+                />
+              )}
+              <div className="flex-1 p-4 flex flex-col">
+                <h3 className="font-medium text-foreground mb-1">{item.name}</h3>
+                <p className="text-sm text-muted-foreground flex-1 line-clamp-2">
+                  {item.description}
+                </p>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-lg font-serif text-accent">${item.price}</span>
+                  <Button
+                    variant="gold-outline"
+                    size="sm"
+                    onClick={() => addToCart(item)}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add
+                  </Button>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Cart Sidebar */}
       <AnimatePresence>
@@ -322,11 +283,13 @@ const Menu = () => {
                         key={item.id}
                         className="flex items-center gap-4 bg-secondary/50 rounded-xl p-3"
                       >
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-16 h-16 rounded-lg object-cover"
-                        />
+                        {item.image_url && (
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            className="w-16 h-16 rounded-lg object-cover"
+                          />
+                        )}
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-foreground text-sm truncate">
                             {item.name}
@@ -412,8 +375,16 @@ const Menu = () => {
                       size="lg"
                       className="w-full"
                       onClick={handleSubmitOrder}
+                      disabled={orderLoading}
                     >
-                      Place Order
+                      {orderLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Placing Order...
+                        </>
+                      ) : (
+                        "Place Order"
+                      )}
                     </Button>
                   )}
                 </div>

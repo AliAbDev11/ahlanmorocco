@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -17,43 +16,19 @@ import {
   Clock,
   AlertCircle,
   Send,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface Request {
-  id: number;
-  category: string;
-  description: string;
-  urgency: string;
-  status: "pending" | "in-progress" | "resolved";
-  createdAt: Date;
-}
+import { useReclamations } from "@/hooks/useReclamations";
 
 const Requests = () => {
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [urgency, setUrgency] = useState("");
-  const [requests, setRequests] = useState<Request[]>([
-    {
-      id: 1,
-      category: "Maintenance",
-      description: "Air conditioning not working properly",
-      urgency: "high",
-      status: "in-progress",
-      createdAt: new Date(Date.now() - 3600000),
-    },
-    {
-      id: 2,
-      category: "Housekeeping",
-      description: "Extra towels and pillows requested",
-      urgency: "low",
-      status: "resolved",
-      createdAt: new Date(Date.now() - 86400000),
-    },
-  ]);
   const { toast } = useToast();
+  const { reclamations, loading, submitting, createReclamation } = useReclamations();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!category || !description || !urgency) {
@@ -65,53 +40,62 @@ const Requests = () => {
       return;
     }
 
-    const newRequest: Request = {
-      id: requests.length + 1,
+    const { error } = await createReclamation({
       category,
       description,
       urgency,
-      status: "pending",
-      createdAt: new Date(),
-    };
-
-    setRequests([newRequest, ...requests]);
-    setCategory("");
-    setDescription("");
-    setUrgency("");
-
-    toast({
-      title: "Request Submitted",
-      description: "Your request has been received. We'll address it shortly.",
     });
+
+    if (error) {
+      toast({
+        title: "Request Failed",
+        description: error,
+        variant: "destructive",
+      });
+    } else {
+      setCategory("");
+      setDescription("");
+      setUrgency("");
+      toast({
+        title: "Request Submitted",
+        description: "Your request has been received. We'll address it shortly.",
+      });
+    }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string | null) => {
     switch (status) {
+      case "open":
       case "pending":
         return <Clock className="w-4 h-4 text-muted-foreground" />;
+      case "in_progress":
       case "in-progress":
         return <AlertCircle className="w-4 h-4 text-accent" />;
       case "resolved":
+      case "closed":
         return <CheckCircle2 className="w-4 h-4 text-green-500" />;
       default:
-        return null;
+        return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: string | null) => {
     switch (status) {
+      case "open":
       case "pending":
         return "Pending";
+      case "in_progress":
       case "in-progress":
         return "In Progress";
       case "resolved":
+      case "closed":
         return "Resolved";
       default:
-        return status;
+        return status || "Unknown";
     }
   };
 
-  const getUrgencyColor = (urgency: string) => {
+  const getUrgencyColor = (urgency: string | null) => {
     switch (urgency) {
       case "low":
         return "bg-secondary text-muted-foreground";
@@ -206,9 +190,24 @@ const Requests = () => {
                 </Select>
               </div>
 
-              <Button type="submit" variant="gold" size="lg" className="w-full">
-                <Send className="w-4 h-4 mr-2" />
-                Submit Request
+              <Button 
+                type="submit" 
+                variant="gold" 
+                size="lg" 
+                className="w-full"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Submit Request
+                  </>
+                )}
               </Button>
             </form>
           </div>
@@ -224,14 +223,18 @@ const Requests = () => {
             Your Requests
           </h2>
 
-          {requests.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-accent" />
+            </div>
+          ) : reclamations.length === 0 ? (
             <div className="bg-card rounded-xl border border-border p-8 text-center">
               <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">No requests yet</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {requests.map((request, index) => (
+              {reclamations.map((request, index) => (
                 <motion.div
                   key={request.id}
                   initial={{ opacity: 0, x: 20 }}
@@ -249,7 +252,7 @@ const Requests = () => {
                           request.urgency
                         )}`}
                       >
-                        {request.urgency.charAt(0).toUpperCase() + request.urgency.slice(1)}
+                        {request.urgency ? request.urgency.charAt(0).toUpperCase() + request.urgency.slice(1) : "Medium"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
@@ -264,12 +267,14 @@ const Requests = () => {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Submitted{" "}
-                    {request.createdAt.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {request.created_at
+                      ? new Date(request.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "Recently"}
                   </p>
                 </motion.div>
               ))}

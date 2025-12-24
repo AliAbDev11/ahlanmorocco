@@ -1,42 +1,92 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Hotel, Lock, User, ArrowRight } from "lucide-react";
+import { Hotel, Lock, User, ArrowRight, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, signUp, user, loading } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Simulate login - in production, this would validate against a backend
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    if (username && password) {
-      localStorage.setItem("hotelGuest", JSON.stringify({ username, room: "Suite 405" }));
+    
+    if (!email || !password) {
       toast({
-        title: "Welcome!",
-        description: "You have successfully logged in.",
-      });
-      navigate("/onboarding");
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Please enter your credentials.",
+        title: "Missing credentials",
+        description: "Please enter your email and password.",
         variant: "destructive",
       });
+      return;
     }
-    setIsLoading(false);
+
+    setIsLoading(true);
+
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email, password);
+        if (error) {
+          toast({
+            title: "Sign up failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Check your email",
+            description: "We've sent you a confirmation link to complete your registration.",
+          });
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) {
+          toast({
+            title: "Login failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Welcome!",
+            description: "You have successfully logged in.",
+          });
+          navigate("/dashboard");
+        }
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -121,25 +171,29 @@ const Login = () => {
           </div>
 
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-serif text-foreground mb-2">Welcome Back</h2>
+            <h2 className="text-3xl font-serif text-foreground mb-2">
+              {isSignUp ? "Create Account" : "Welcome Back"}
+            </h2>
             <p className="text-muted-foreground">
-              Enter the credentials provided at check-in
+              {isSignUp 
+                ? "Sign up to access hotel services" 
+                : "Enter your credentials to continue"}
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-foreground font-medium">
-                Username
+              <Label htmlFor="email" className="text-foreground font-medium">
+                Email
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Your room username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 h-12 bg-secondary/50 border-border focus:border-accent focus:ring-accent"
                 />
               </div>
@@ -154,7 +208,7 @@ const Login = () => {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Your room password"
+                  placeholder="Your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 h-12 bg-secondary/50 border-border focus:border-accent focus:ring-accent"
@@ -172,16 +226,28 @@ const Login = () => {
               {isLoading ? (
                 <span className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
-                  Signing in...
+                  {isSignUp ? "Creating account..." : "Signing in..."}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  Sign In
+                  {isSignUp ? "Sign Up" : "Sign In"}
                   <ArrowRight className="w-4 h-4" />
                 </span>
               )}
             </Button>
           </form>
+
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-sm text-accent hover:underline"
+            >
+              {isSignUp 
+                ? "Already have an account? Sign in" 
+                : "Don't have an account? Sign up"}
+            </button>
+          </div>
 
           <div className="mt-8 text-center">
             <p className="text-sm text-muted-foreground">
@@ -189,12 +255,6 @@ const Login = () => {
             </p>
             <p className="text-sm text-accent font-medium mt-1">
               +1 (555) 123-4567
-            </p>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-border">
-            <p className="text-xs text-center text-muted-foreground">
-              Demo credentials: Any username/password will work
             </p>
           </div>
         </motion.div>
