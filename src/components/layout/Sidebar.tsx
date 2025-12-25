@@ -17,6 +17,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useSidebarContext } from "@/contexts/SidebarContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 const navItems = [
   { icon: Home, label: "Dashboard", path: "/dashboard" },
@@ -25,17 +28,28 @@ const navItems = [
   { icon: Map, label: "Hotel Map", path: "/map" },
   { icon: Utensils, label: "Menu & Dining", path: "/menu" },
   { icon: Compass, label: "Local Guide", path: "/guide" },
-  { icon: MessageCircle, label: "Requests", path: "/requests" },
+  { icon: MessageCircle, label: "Reclamations", path: "/requests" },
 ];
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isCollapsed, toggleCollapsed } = useSidebarContext();
+  const { signOut } = useAuth();
+  const { toast } = useToast();
+  const { t } = useTranslation();
 
-  const handleLogout = () => {
-    localStorage.removeItem("hotelGuest");
-    navigate("/");
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: t("common.error"),
+        description: t("auth.signOutError"),
+        variant: "destructive",
+      });
+    } else {
+      navigate("/", { replace: true });
+    }
   };
 
   return (

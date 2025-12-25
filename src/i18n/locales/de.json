@@ -78,11 +78,12 @@
     "directions": "Wegbeschreibung",
     "noAttractions": "Keine Attraktionen verfügbar"
   },
-  "requests": {
-    "title": "Anfragen",
-    "myRequests": "Meine Anfragen",
-    "newRequest": "Neue Anfrage",
-    "submitComplaint": "Beschwerde einreichen",
+  "reclamations": {
+    "title": "Service-Reklamationen",
+    "subtitle": "Reichen Sie Reklamationen ein oder melden Sie Probleme. Unser Team ist für Sie da.",
+    "myReclamations": "Ihre Reklamationen",
+    "newReclamation": "Neue Reklamation",
+    "submitReclamation": "Reklamation einreichen",
     "category": "Kategorie",
     "urgency": "Dringlichkeit",
     "low": "Niedrig",
@@ -94,7 +95,14 @@
     "completed": "Abgeschlossen",
     "resolved": "Gelöst",
     "open": "Offen",
-    "noRequests": "Noch keine Anfragen"
+    "noReclamations": "Noch keine Reklamationen",
+    "tellUsHowToHelp": "Teilen Sie uns mit, wie wir Ihnen helfen können",
+    "submitting": "Wird gesendet...",
+    "reclamationSubmitted": "Reklamation eingereicht",
+    "reclamationSubmittedDesc": "Ihre Reklamation wurde empfangen. Wir werden sie in Kürze bearbeiten.",
+    "reclamationFailed": "Reklamation fehlgeschlagen",
+    "fillAllFields": "Bitte füllen Sie alle Felder aus",
+    "fillAllFieldsDesc": "Alle Felder sind erforderlich, um eine Reklamation einzureichen."
   },
   "chatbot": {
     "title": "KI-Concierge",
@@ -123,5 +131,14 @@
     "floors": "Stockwerke",
     "amenities": "Ausstattung",
     "yourRoom": "Ihr Zimmer"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "aiAssistant": "KI-Assistent",
+    "services": "Dienstleistungen",
+    "hotelMap": "Hotelkarte",
+    "menuDining": "Menü & Essen",
+    "localGuide": "Lokaler Führer",
+    "reclamations": "Reklamationen"
   }
 }
