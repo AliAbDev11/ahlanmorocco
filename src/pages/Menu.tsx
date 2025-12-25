@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,6 +44,7 @@ const categories = [
 ];
 
 const Menu = () => {
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState("Breakfast");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -68,7 +70,7 @@ const Menu = () => {
       return [...prev, { ...item, quantity: 1 }];
     });
     toast({
-      title: "Added to cart",
+      title: t("menu.itemAdded"),
       description: `${item.name} has been added to your order.`,
     });
   };
@@ -107,7 +109,7 @@ const Menu = () => {
       });
     } else {
       toast({
-        title: "Order Placed!",
+        title: t("menu.orderPlaced"),
         description: "Your order has been submitted. Estimated delivery: 30-45 minutes.",
       });
       setCart([]);
@@ -145,7 +147,7 @@ const Menu = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl lg:text-4xl font-serif text-foreground mb-2">
-              In-Room Dining
+              {t("menu.inRoomDining")}
             </h1>
             <p className="text-muted-foreground flex items-center gap-2">
               <Clock className="w-4 h-4" />
@@ -199,7 +201,7 @@ const Menu = () => {
       {/* Menu Items */}
       {filteredItems.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No items available in this category.</p>
+          <p className="text-muted-foreground">{t("menu.noItems")}</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
@@ -260,7 +262,7 @@ const Menu = () => {
             >
               {/* Cart Header */}
               <div className="p-6 border-b border-border flex items-center justify-between">
-                <h2 className="text-xl font-serif text-foreground">Your Order</h2>
+                <h2 className="text-xl font-serif text-foreground">{t("menu.yourOrder")}</h2>
                 <button
                   onClick={() => setIsCartOpen(false)}
                   className="p-2 hover:bg-secondary rounded-lg transition-colors"
@@ -274,7 +276,7 @@ const Menu = () => {
                 {cart.length === 0 ? (
                   <div className="text-center py-12">
                     <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Your cart is empty</p>
+                    <p className="text-muted-foreground">{t("menu.emptyCart")}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -326,7 +328,7 @@ const Menu = () => {
                     className="mt-6 space-y-4"
                   >
                     <div className="space-y-2">
-                      <Label>Delivery Time</Label>
+                      <Label>{t("menu.deliveryTime")}</Label>
                       <Select value={deliveryTime} onValueChange={setDeliveryTime}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select time" />
@@ -340,7 +342,7 @@ const Menu = () => {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Special Requests</Label>
+                      <Label>{t("menu.specialRequests")}</Label>
                       <Textarea
                         value={specialRequests}
                         onChange={(e) => setSpecialRequests(e.target.value)}
@@ -356,7 +358,7 @@ const Menu = () => {
               {cart.length > 0 && (
                 <div className="p-6 border-t border-border space-y-4">
                   <div className="flex items-center justify-between text-lg">
-                    <span className="text-muted-foreground">Total</span>
+                    <span className="text-muted-foreground">{t("menu.total")}</span>
                     <span className="font-serif text-foreground">${cartTotal.toFixed(2)}</span>
                   </div>
                   {!showOrderForm ? (
@@ -383,7 +385,7 @@ const Menu = () => {
                           Placing Order...
                         </>
                       ) : (
-                        "Place Order"
+                        t("menu.placeOrder")
                       )}
                     </Button>
                   )}

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   UtensilsCrossed,
@@ -40,6 +41,7 @@ const colorMap: Record<string, string> = {
 };
 
 const Services = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { services, loading: servicesLoading, error: servicesError } = useHotelServices();
   const { createRequest, submitting } = useServiceRequests();
@@ -52,14 +54,14 @@ const Services = () => {
 
     if (error) {
       toast({
-        title: "Request Failed",
+        title: t("common.error"),
         description: error,
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Service Requested",
-        description: `Your ${serviceName} request has been submitted. We'll contact you shortly.`,
+        title: t("services.serviceRequested"),
+        description: `Your ${serviceName} request has been submitted.`,
       });
     }
   };
@@ -89,7 +91,7 @@ const Services = () => {
         className="mb-8"
       >
         <h1 className="text-3xl lg:text-4xl font-serif text-foreground mb-2">
-          Hotel Services
+          {t("services.hotelServices")}
         </h1>
         <p className="text-muted-foreground">
           Everything you need for a perfect stay, just one tap away
