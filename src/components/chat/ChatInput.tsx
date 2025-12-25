@@ -10,7 +10,7 @@ interface ChatInputProps {
   value: string;
   onChange: (value: string) => void;
   onSend: () => void;
-  onSendAudio: (audioBlob: Blob, duration: number) => void;
+  onSendAudio: (audioBlob: Blob, duration: number) => Promise<void>;
   disabled: boolean;
 }
 
@@ -28,6 +28,7 @@ const ChatInput = ({ value, onChange, onSend, onSendAudio, disabled }: ChatInput
     startRecording,
     stopRecording,
     cancelRecording,
+    resetState,
     isSupported,
   } = useAudioRecorder();
 
@@ -44,7 +45,15 @@ const ChatInput = ({ value, onChange, onSend, onSendAudio, disabled }: ChatInput
     } else if (recordingState === "recording") {
       const audioBlob = await stopRecording();
       if (audioBlob) {
-        onSendAudio(audioBlob, recordingDuration);
+        try {
+          await onSendAudio(audioBlob, recordingDuration);
+        } finally {
+          // Always reset state after sending, whether success or error
+          resetState();
+        }
+      } else {
+        // If no blob was returned, reset state
+        resetState();
       }
     }
   };
