@@ -34,7 +34,7 @@ const Requests = () => {
     if (!category || !description || !urgency) {
       toast({
         title: "Please fill all fields",
-        description: "All fields are required to submit a request.",
+        description: "All fields are required to submit a reclamation.",
         variant: "destructive",
       });
       return;
@@ -48,7 +48,7 @@ const Requests = () => {
 
     if (error) {
       toast({
-        title: "Request Failed",
+        title: "Reclamation Failed",
         description: error,
         variant: "destructive",
       });
@@ -57,8 +57,8 @@ const Requests = () => {
       setDescription("");
       setUrgency("");
       toast({
-        title: "Request Submitted",
-        description: "Your request has been received. We'll address it shortly.",
+        title: "Reclamation Submitted",
+        description: "Your reclamation has been received. We'll address it shortly.",
       });
     }
   };
@@ -117,10 +117,10 @@ const Requests = () => {
         className="mb-8"
       >
         <h1 className="text-3xl lg:text-4xl font-serif text-foreground mb-2">
-          Service Requests
+          Service Reclamations
         </h1>
         <p className="text-muted-foreground">
-          Submit requests or report issues. Our team is here to help.
+          Submit reclamations or report issues. Our team is here to help.
         </p>
       </motion.div>
 
@@ -138,7 +138,7 @@ const Requests = () => {
               </div>
               <div>
                 <h2 className="text-lg font-medium text-foreground">
-                  New Request
+                  New Reclamation
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   Tell us how we can help
@@ -205,7 +205,7 @@ const Requests = () => {
                 ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />
-                    Submit Request
+                    Submit Reclamation
                   </>
                 )}
               </Button>
@@ -220,7 +220,7 @@ const Requests = () => {
           transition={{ delay: 0.2 }}
         >
           <h2 className="text-lg font-medium text-foreground mb-4">
-            Your Requests
+            Your Reclamations
           </h2>
 
           {loading ? (
@@ -230,7 +230,7 @@ const Requests = () => {
           ) : reclamations.length === 0 ? (
             <div className="bg-card rounded-xl border border-border p-8 text-center">
               <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No requests yet</p>
+              <p className="text-muted-foreground">No reclamations yet</p>
             </div>
           ) : (
             <div className="space-y-3">

@@ -78,11 +78,12 @@
     "directions": "Itinéraire",
     "noAttractions": "Aucune attraction disponible"
   },
-  "requests": {
-    "title": "Demandes",
-    "myRequests": "Mes demandes",
-    "newRequest": "Nouvelle demande",
-    "submitComplaint": "Soumettre une réclamation",
+  "reclamations": {
+    "title": "Réclamations de service",
+    "subtitle": "Soumettez des réclamations ou signalez des problèmes. Notre équipe est là pour vous aider.",
+    "myReclamations": "Vos réclamations",
+    "newReclamation": "Nouvelle réclamation",
+    "submitReclamation": "Soumettre la réclamation",
     "category": "Catégorie",
     "urgency": "Urgence",
     "low": "Faible",
@@ -94,7 +95,14 @@
     "completed": "Terminé",
     "resolved": "Résolu",
     "open": "Ouvert",
-    "noRequests": "Aucune demande pour le moment"
+    "noReclamations": "Aucune réclamation pour le moment",
+    "tellUsHowToHelp": "Dites-nous comment nous pouvons vous aider",
+    "submitting": "Envoi en cours...",
+    "reclamationSubmitted": "Réclamation soumise",
+    "reclamationSubmittedDesc": "Votre réclamation a été reçue. Nous y répondrons sous peu.",
+    "reclamationFailed": "Échec de la réclamation",
+    "fillAllFields": "Veuillez remplir tous les champs",
+    "fillAllFieldsDesc": "Tous les champs sont requis pour soumettre une réclamation."
   },
   "chatbot": {
     "title": "Concierge IA",
@@ -123,5 +131,14 @@
     "floors": "Étages",
     "amenities": "Équipements",
     "yourRoom": "Votre chambre"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "aiAssistant": "Assistant IA",
+    "services": "Services",
+    "hotelMap": "Plan de l'hôtel",
+    "menuDining": "Menu et restauration",
+    "localGuide": "Guide local",
+    "reclamations": "Réclamations"
   }
 }

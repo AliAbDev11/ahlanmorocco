@@ -78,11 +78,12 @@
     "directions": "Cómo llegar",
     "noAttractions": "No hay atracciones disponibles"
   },
-  "requests": {
-    "title": "Solicitudes",
-    "myRequests": "Mis solicitudes",
-    "newRequest": "Nueva solicitud",
-    "submitComplaint": "Enviar queja",
+  "reclamations": {
+    "title": "Reclamaciones de servicio",
+    "subtitle": "Envía reclamaciones o reporta problemas. Nuestro equipo está aquí para ayudarte.",
+    "myReclamations": "Tus reclamaciones",
+    "newReclamation": "Nueva reclamación",
+    "submitReclamation": "Enviar reclamación",
     "category": "Categoría",
     "urgency": "Urgencia",
     "low": "Baja",
@@ -94,7 +95,14 @@
     "completed": "Completado",
     "resolved": "Resuelto",
     "open": "Abierto",
-    "noRequests": "Sin solicitudes aún"
+    "noReclamations": "Sin reclamaciones aún",
+    "tellUsHowToHelp": "Cuéntanos cómo podemos ayudarte",
+    "submitting": "Enviando...",
+    "reclamationSubmitted": "Reclamación enviada",
+    "reclamationSubmittedDesc": "Tu reclamación ha sido recibida. La atenderemos pronto.",
+    "reclamationFailed": "Error en la reclamación",
+    "fillAllFields": "Por favor completa todos los campos",
+    "fillAllFieldsDesc": "Todos los campos son requeridos para enviar una reclamación."
   },
   "chatbot": {
     "title": "Conserje IA",
@@ -123,5 +131,14 @@
     "floors": "Pisos",
     "amenities": "Servicios",
     "yourRoom": "Tu habitación"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "aiAssistant": "Asistente IA",
+    "services": "Servicios",
+    "hotelMap": "Mapa del hotel",
+    "menuDining": "Menú y restaurante",
+    "localGuide": "Guía local",
+    "reclamations": "Reclamaciones"
   }
 }

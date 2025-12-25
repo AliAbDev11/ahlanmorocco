@@ -78,11 +78,12 @@
     "directions": "Get Directions",
     "noAttractions": "No attractions available"
   },
-  "requests": {
-    "title": "Requests",
-    "myRequests": "My Requests",
-    "newRequest": "New Request",
-    "submitComplaint": "Submit Complaint",
+  "reclamations": {
+    "title": "Service Reclamations",
+    "subtitle": "Submit reclamations or report issues. Our team is here to help.",
+    "myReclamations": "Your Reclamations",
+    "newReclamation": "New Reclamation",
+    "submitReclamation": "Submit Reclamation",
     "category": "Category",
     "urgency": "Urgency",
     "low": "Low",
@@ -94,7 +95,14 @@
     "completed": "Completed",
     "resolved": "Resolved",
     "open": "Open",
-    "noRequests": "No requests yet"
+    "noReclamations": "No reclamations yet",
+    "tellUsHowToHelp": "Tell us how we can help",
+    "submitting": "Submitting...",
+    "reclamationSubmitted": "Reclamation Submitted",
+    "reclamationSubmittedDesc": "Your reclamation has been received. We'll address it shortly.",
+    "reclamationFailed": "Reclamation Failed",
+    "fillAllFields": "Please fill all fields",
+    "fillAllFieldsDesc": "All fields are required to submit a reclamation."
   },
   "chatbot": {
     "title": "AI Concierge",
@@ -123,5 +131,14 @@
     "floors": "Floors",
     "amenities": "Amenities",
     "yourRoom": "Your Room"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "aiAssistant": "AI Assistant",
+    "services": "Services",
+    "hotelMap": "Hotel Map",
+    "menuDining": "Menu & Dining",
+    "localGuide": "Local Guide",
+    "reclamations": "Reclamations"
   }
 }
