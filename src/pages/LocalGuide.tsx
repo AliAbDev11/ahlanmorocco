@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { MapPin, Clock, Star, ExternalLink, Loader2 } from "lucide-react";
 import { useLocalAttractions } from "@/hooks/useLocalAttractions";
 
 const LocalGuide = () => {
+  const { t } = useTranslation();
   const { attractions, loading, error } = useLocalAttractions();
 
   const handleGetDirections = (googleMapsUrl: string | null, name: string) => {
@@ -39,10 +41,10 @@ const LocalGuide = () => {
         className="mb-8"
       >
         <h1 className="text-3xl lg:text-4xl font-serif text-foreground mb-2">
-          Local Guide
+          {t("localGuide.title")}
         </h1>
         <p className="text-muted-foreground">
-          Discover the best attractions, dining, and experiences near our hotel
+          {t("localGuide.discoverArea")}
         </p>
       </motion.div>
 
@@ -131,15 +133,15 @@ const LocalGuide = () => {
                     <MapPin className="w-3 h-3" />
                     {attraction.distance_km ? `${attraction.distance_km} km away` : attraction.address}
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleGetDirections(attraction.google_maps_url, attraction.name)}
-                    className="text-accent hover:text-accent"
-                  >
-                    Directions
-                    <ExternalLink className="w-3 h-3 ml-1" />
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleGetDirections(attraction.google_maps_url, attraction.name)}
+                      className="text-accent hover:text-accent"
+                    >
+                      {t("localGuide.directions")}
+                      <ExternalLink className="w-3 h-3 ml-1" />
+                    </Button>
                 </div>
               </div>
             </motion.div>

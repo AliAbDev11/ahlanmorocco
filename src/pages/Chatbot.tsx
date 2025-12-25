@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useGuestData } from "@/hooks/useGuestData";
@@ -10,14 +11,16 @@ import TypingIndicator from "@/components/chat/TypingIndicator";
 import ChatInput from "@/components/chat/ChatInput";
 import QuickSuggestions from "@/components/chat/QuickSuggestions";
 
-const DEFAULT_SUGGESTIONS = [
-  "Room service menu",
-  "Book a spa appointment",
-  "Restaurant hours",
-  "Request housekeeping",
-];
-
 const Chatbot = () => {
+  const { t } = useTranslation();
+  
+  const DEFAULT_SUGGESTIONS = [
+    t("chatbot.suggestions.roomService"),
+    t("chatbot.suggestions.localTips"),
+    t("chatbot.suggestions.bookSpa"),
+    t("chatbot.suggestions.restaurant"),
+  ];
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -195,10 +198,10 @@ const Chatbot = () => {
             <Bot className="w-6 h-6 text-accent" />
           </div>
           <div>
-            <h1 className="text-xl font-serif text-foreground">AI Concierge</h1>
+            <h1 className="text-xl font-serif text-foreground">{t("chatbot.title")}</h1>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              Online & ready to help
+              {t("chatbot.online")}
             </p>
           </div>
         </div>
