@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -44,25 +45,31 @@ const Services = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { services, loading: servicesLoading, error: servicesError } = useHotelServices();
-  const { createRequest, submitting } = useServiceRequests();
+  const { createRequest } = useServiceRequests();
+  const [submittingService, setSubmittingService] = useState<string | null>(null);
 
   const handleRequest = async (serviceName: string) => {
-    const { error } = await createRequest({
-      serviceType: serviceName,
-      description: `Request for ${serviceName}`,
-    });
+    setSubmittingService(serviceName);
+    try {
+      const { error } = await createRequest({
+        serviceType: serviceName,
+        description: `Request for ${serviceName}`,
+      });
 
-    if (error) {
-      toast({
-        title: t("common.error"),
-        description: error,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: t("services.serviceRequested"),
-        description: `Your ${serviceName} request has been submitted.`,
-      });
+      if (error) {
+        toast({
+          title: t("common.error"),
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t("services.serviceRequested"),
+          description: `Your ${serviceName} request has been submitted.`,
+        });
+      }
+    } finally {
+      setSubmittingService(null);
     }
   };
 
@@ -136,9 +143,9 @@ const Services = () => {
                   size="sm"
                   className="w-full group-hover:bg-accent group-hover:text-accent-foreground"
                   onClick={() => handleRequest(service.name)}
-                  disabled={submitting}
+                  disabled={submittingService === service.name}
                 >
-                  {submitting ? (
+                  {submittingService === service.name ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
