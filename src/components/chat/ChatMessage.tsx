@@ -25,6 +25,69 @@ const formatDuration = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
+const formatMessageText = (text: string): React.ReactNode => {
+  // Split by double newlines for paragraphs, or single newlines
+  const lines = text.split(/\n+/);
+  
+  const elements: React.ReactNode[] = [];
+  let currentList: string[] = [];
+  let listType: 'ul' | 'ol' | null = null;
+  
+  const flushList = () => {
+    if (currentList.length > 0 && listType) {
+      const ListTag = listType;
+      elements.push(
+        <ListTag key={`list-${elements.length}`} className={cn(
+          "my-2 space-y-1",
+          listType === 'ul' ? "list-disc pl-5" : "list-decimal pl-5"
+        )}>
+          {currentList.map((item, i) => (
+            <li key={i} className="text-sm leading-relaxed">{item}</li>
+          ))}
+        </ListTag>
+      );
+      currentList = [];
+      listType = null;
+    }
+  };
+
+  lines.forEach((line, index) => {
+    const trimmedLine = line.trim();
+    if (!trimmedLine) return;
+
+    // Check for bullet points (•, -, *, or emoji bullets)
+    const bulletMatch = trimmedLine.match(/^[•\-\*]\s*(.+)$/);
+    const emojiMatch = trimmedLine.match(/^(📱|🏨|🍽️|🌴|✨|🔔|📞|🛎️|💡|ℹ️|👉|✅|❌|⚠️|🎯|🔹|🔸|▪️|▫️)\s*(.+)$/);
+    const numberedMatch = trimmedLine.match(/^(\d+)[.)\-]\s*(.+)$/);
+
+    if (bulletMatch || emojiMatch) {
+      if (listType !== 'ul') {
+        flushList();
+        listType = 'ul';
+      }
+      const content = bulletMatch ? bulletMatch[1] : (emojiMatch ? `${emojiMatch[1]} ${emojiMatch[2]}` : trimmedLine);
+      currentList.push(content);
+    } else if (numberedMatch) {
+      if (listType !== 'ol') {
+        flushList();
+        listType = 'ol';
+      }
+      currentList.push(numberedMatch[2]);
+    } else {
+      flushList();
+      elements.push(
+        <p key={`p-${index}`} className="text-sm leading-relaxed mb-2 last:mb-0">
+          {trimmedLine}
+        </p>
+      );
+    }
+  });
+
+  flushList();
+
+  return <div className="space-y-1">{elements}</div>;
+};
+
 const ChatMessage = ({ message }: ChatMessageProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -109,9 +172,11 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
               </div>
             </div>
           ) : (
-            <p className="text-sm leading-relaxed">{message.text}</p>
+            message.isBot ? formatMessageText(message.text) : (
+              <p className="text-sm leading-relaxed">{message.text}</p>
+            )
           )}
-          <span className="text-xs opacity-60 mt-1 block">
+          <span className="text-xs opacity-60 mt-2 block">
             {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
         </div>
