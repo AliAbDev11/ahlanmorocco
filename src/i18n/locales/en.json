@@ -27,7 +27,7 @@
     "explore": "Explore",
     "aiAssistant": "AI Assistant",
     "orderFood": "Order Food",
-    "roomService": "Room Service",
+    "hotelServices": "Hotel Services",
     "hotelMap": "Hotel Map",
     "localGuide": "Local Guide",
     "localGuideDesc": "Discover the best attractions, restaurants, and hidden gems nearby",
@@ -105,11 +105,11 @@
     "fillAllFieldsDesc": "All fields are required to submit a reclamation."
   },
   "chatbot": {
-    "title": "AI Concierge",
+    "title": "AI Assistant",
     "online": "Online",
     "placeholder": "Type a message...",
     "suggestions": {
-      "roomService": "Room Service",
+      "hotelServices": "Hotel Services",
       "localTips": "Local Tips",
       "bookSpa": "Book Spa",
       "restaurant": "Restaurant"
