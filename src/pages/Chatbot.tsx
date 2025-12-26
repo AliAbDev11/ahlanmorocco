@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
+import ahlanAssistantLogo from "@/assets/ahlan-assistant-logo.webp";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -24,7 +25,7 @@ const Chatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hello! I'm your personal AI assistant. How may I assist you today? You can ask me about hotel services, dining options, local attractions, or anything else you need.",
+      text: "Hello! I'm your personal AI assistant. How may I assist you today? You can ask me about hotel services, dining options, local attractions.",
       isBot: true,
       timestamp: new Date(),
     },
@@ -194,8 +195,8 @@ const Chatbot = () => {
         className="flex-shrink-0 p-6 border-b border-border bg-card"
       >
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-            <Bot className="w-6 h-6 text-accent" />
+          <div className="w-12 h-12 rounded-xl overflow-hidden">
+            <img src={ahlanAssistantLogo} alt="AI Assistant" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-xl font-serif text-foreground">{t("chatbot.title")}</h1>

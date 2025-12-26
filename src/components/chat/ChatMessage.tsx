@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { Bot, User, Mic, Play, Pause } from "lucide-react";
+import { User, Mic, Play, Pause } from "lucide-react";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import ahlanAssistantLogo from "@/assets/ahlan-assistant-logo.webp";
 
 export interface Message {
   id: number;
@@ -52,12 +53,12 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
     >
       <div className={`flex gap-3 max-w-[80%] ${message.isBot ? "" : "flex-row-reverse"}`}>
         <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-            message.isBot ? "bg-primary" : "bg-accent"
+          className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${
+            message.isBot ? "" : "bg-accent"
           }`}
         >
           {message.isBot ? (
-            <Bot className="w-4 h-4 text-primary-foreground" />
+            <img src={ahlanAssistantLogo} alt="AI Assistant" className="w-full h-full object-cover" />
           ) : (
             <User className="w-4 h-4 text-accent-foreground" />
           )}
