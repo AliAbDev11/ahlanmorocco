@@ -27,7 +27,7 @@
     "explore": "Entdecken",
     "aiAssistant": "KI-Assistent",
     "orderFood": "Essen bestellen",
-    "roomService": "Zimmerservice",
+    "hotelServices": "Hotelservices",
     "hotelMap": "Hotelkarte",
     "localGuide": "Lokaler Führer",
     "localGuideDesc": "Entdecken Sie die besten Attraktionen, Restaurants und versteckten Juwelen in der Nähe",
@@ -105,11 +105,11 @@
     "fillAllFieldsDesc": "Alle Felder sind erforderlich, um eine Reklamation einzureichen."
   },
   "chatbot": {
-    "title": "KI-Concierge",
+    "title": "KI-Assistent",
     "online": "Online",
     "placeholder": "Nachricht eingeben...",
     "suggestions": {
-      "roomService": "Zimmerservice",
+      "hotelServices": "Hotelservices",
       "localTips": "Lokale Tipps",
       "bookSpa": "Spa buchen",
       "restaurant": "Restaurant"

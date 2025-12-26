@@ -15,7 +15,7 @@ const Chatbot = () => {
   const { t } = useTranslation();
   
   const DEFAULT_SUGGESTIONS = [
-    t("chatbot.suggestions.roomService"),
+    t("chatbot.suggestions.hotelServices"),
     t("chatbot.suggestions.localTips"),
     t("chatbot.suggestions.bookSpa"),
     t("chatbot.suggestions.restaurant"),
@@ -24,7 +24,7 @@ const Chatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hello! I'm your personal AI concierge. How may I assist you today? You can ask me about hotel services, dining options, local attractions, or anything else you need.",
+      text: "Hello! I'm your personal AI assistant. How may I assist you today? You can ask me about hotel services, dining options, local attractions, or anything else you need.",
       isBot: true,
       timestamp: new Date(),
     },

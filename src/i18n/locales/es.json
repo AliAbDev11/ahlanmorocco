@@ -27,7 +27,7 @@
     "explore": "Explorar",
     "aiAssistant": "Asistente IA",
     "orderFood": "Pedir comida",
-    "roomService": "Servicio de habitación",
+    "hotelServices": "Servicios del Hotel",
     "hotelMap": "Mapa del hotel",
     "localGuide": "Guía local",
     "localGuideDesc": "Descubre las mejores atracciones, restaurantes y joyas ocultas cercanas",
@@ -105,11 +105,11 @@
     "fillAllFieldsDesc": "Todos los campos son requeridos para enviar una reclamación."
   },
   "chatbot": {
-    "title": "Conserje IA",
+    "title": "Asistente IA",
     "online": "En línea",
     "placeholder": "Escribe un mensaje...",
     "suggestions": {
-      "roomService": "Servicio de habitación",
+      "hotelServices": "Servicios del Hotel",
       "localTips": "Consejos locales",
       "bookSpa": "Reservar spa",
       "restaurant": "Restaurante"

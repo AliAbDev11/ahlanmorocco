@@ -91,7 +91,7 @@ const Dashboard = () => {
   const quickActions = [
     { icon: MessageSquare, label: t("dashboard.aiAssistant"), path: "/chatbot", color: "bg-primary" },
     { icon: Utensils, label: t("dashboard.orderFood"), path: "/menu", color: "bg-accent" },
-    { icon: Sparkles, label: t("dashboard.roomService"), path: "/services", color: "bg-primary" },
+    { icon: Sparkles, label: t("dashboard.hotelServices"), path: "/services", color: "bg-primary" },
     { icon: Map, label: t("dashboard.hotelMap"), path: "/map", color: "bg-accent" },
   ];
 
