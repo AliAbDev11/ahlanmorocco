@@ -149,31 +149,6 @@ const LocalGuide = () => {
         </div>
       )}
 
-      {/* Info Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="mt-8 p-6 bg-secondary/50 rounded-xl border border-border"
-      >
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
-            <Clock className="w-6 h-6 text-accent" />
-          </div>
-          <div>
-            <h3 className="font-medium text-foreground mb-1">
-              Need personalized recommendations?
-            </h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              Our concierge team can arrange private tours, restaurant reservations, 
-              and exclusive experiences tailored to your interests.
-            </p>
-            <Button variant="gold" size="sm">
-              Contact Concierge
-            </Button>
-          </div>
-        </div>
-      </motion.div>
     </div>
   );
 };
