@@ -14,51 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      activity_log: {
-        Row: {
-          action_type: string
-          created_at: string | null
-          details: Json | null
-          entity_id: string
-          entity_type: string
-          id: string
-          staff_id: string | null
-        }
-        Insert: {
-          action_type: string
-          created_at?: string | null
-          details?: Json | null
-          entity_id: string
-          entity_type: string
-          id?: string
-          staff_id?: string | null
-        }
-        Update: {
-          action_type?: string
-          created_at?: string | null
-          details?: Json | null
-          entity_id?: string
-          entity_type?: string
-          id?: string
-          staff_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "activity_log_staff_id_fkey"
-            columns: ["staff_id"]
-            isOneToOne: false
-            referencedRelation: "staff"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "activity_log_staff_id_fkey"
-            columns: ["staff_id"]
-            isOneToOne: false
-            referencedRelation: "staff_workload"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       guests: {
         Row: {
           check_in_date: string
@@ -205,8 +160,6 @@ export type Database = {
       }
       orders: {
         Row: {
-          assigned_to: string | null
-          completed_at: string | null
           created_at: string | null
           delivery_time: string | null
           guest_id: string | null
@@ -219,8 +172,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          assigned_to?: string | null
-          completed_at?: string | null
           created_at?: string | null
           delivery_time?: string | null
           guest_id?: string | null
@@ -233,8 +184,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          assigned_to?: string | null
-          completed_at?: string | null
           created_at?: string | null
           delivery_time?: string | null
           guest_id?: string | null
@@ -248,20 +197,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "orders_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "staff"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "staff_workload"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "orders_guest_id_fkey"
             columns: ["guest_id"]
             isOneToOne: false
@@ -272,7 +207,6 @@ export type Database = {
       }
       reclamations: {
         Row: {
-          assigned_to: string | null
           category: string
           created_at: string | null
           description: string
@@ -285,7 +219,6 @@ export type Database = {
           urgency: string | null
         }
         Insert: {
-          assigned_to?: string | null
           category: string
           created_at?: string | null
           description: string
@@ -298,7 +231,6 @@ export type Database = {
           urgency?: string | null
         }
         Update: {
-          assigned_to?: string | null
           category?: string
           created_at?: string | null
           description?: string
@@ -312,20 +244,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "reclamations_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "staff"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reclamations_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "staff_workload"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "reclamations_guest_id_fkey"
             columns: ["guest_id"]
             isOneToOne: false
@@ -336,8 +254,6 @@ export type Database = {
       }
       service_requests: {
         Row: {
-          assigned_to: string | null
-          completed_at: string | null
           created_at: string | null
           description: string | null
           guest_id: string | null
@@ -349,8 +265,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          assigned_to?: string | null
-          completed_at?: string | null
           created_at?: string | null
           description?: string | null
           guest_id?: string | null
@@ -362,8 +276,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          assigned_to?: string | null
-          completed_at?: string | null
           created_at?: string | null
           description?: string | null
           guest_id?: string | null
@@ -376,20 +288,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "service_requests_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "staff"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_requests_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "staff_workload"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "service_requests_guest_id_fkey"
             columns: ["guest_id"]
             isOneToOne: false
@@ -398,84 +296,12 @@ export type Database = {
           },
         ]
       }
-      staff: {
-        Row: {
-          created_at: string | null
-          department: string | null
-          email: string
-          full_name: string
-          id: string
-          is_active: boolean | null
-          phone_number: string | null
-          role: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          department?: string | null
-          email: string
-          full_name: string
-          id?: string
-          is_active?: boolean | null
-          phone_number?: string | null
-          role: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          department?: string | null
-          email?: string
-          full_name?: string
-          id?: string
-          is_active?: boolean | null
-          phone_number?: string | null
-          role?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
-      daily_stats: {
-        Row: {
-          cancelled_orders: number | null
-          completed_orders: number | null
-          date: string | null
-          pending_orders: number | null
-          total_revenue: number | null
-        }
-        Relationships: []
-      }
-      staff_workload: {
-        Row: {
-          department: string | null
-          full_name: string | null
-          id: string | null
-          open_reclamations: number | null
-          pending_orders: number | null
-          pending_services: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
-      get_staff_by_email: {
-        Args: { staff_email: string }
-        Returns: {
-          created_at: string
-          department: string
-          email: string
-          full_name: string
-          id: string
-          is_active: boolean
-          phone_number: string
-          role: string
-          user_id: string
-        }[]
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
