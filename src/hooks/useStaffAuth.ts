@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface StaffMember {
   id: string;
-  user_id: string;
+  user_id: string | null;
   full_name: string;
   email: string;
   role: string;
@@ -30,7 +30,7 @@ export const useStaffAuth = () => {
         if (session?.user) {
           // Defer the staff check to avoid deadlock
           setTimeout(() => {
-            checkStaffStatus(session.user.id);
+            checkStaffStatus(session.user.id, session.user.email);
           }, 0);
         } else {
           setStaff(null);
@@ -45,7 +45,7 @@ export const useStaffAuth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        checkStaffStatus(session.user.id);
+        checkStaffStatus(session.user.id, session.user.email);
       } else {
         setLoading(false);
       }
@@ -54,9 +54,10 @@ export const useStaffAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkStaffStatus = async (userId: string) => {
+  const checkStaffStatus = async (userId: string, userEmail?: string) => {
     try {
-      const { data, error } = await supabase
+      // First try to find staff by user_id
+      let { data, error } = await supabase
         .from("staff")
         .select("*")
         .eq("user_id", userId)
@@ -64,10 +65,38 @@ export const useStaffAuth = () => {
         .maybeSingle();
 
       if (error) {
-        console.error("Error checking staff status:", error);
-        setIsStaff(false);
-        setStaff(null);
-      } else if (data) {
+        console.error("Error checking staff status by user_id:", error);
+      }
+
+      // If not found by user_id, try by email and link the account
+      if (!data && userEmail) {
+        const { data: emailData, error: emailError } = await supabase
+          .from("staff")
+          .select("*")
+          .eq("email", userEmail)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (emailError) {
+          console.error("Error checking staff status by email:", emailError);
+        } else if (emailData) {
+          // Found by email - update the user_id to link the accounts
+          const { error: updateError } = await supabase
+            .from("staff")
+            .update({ user_id: userId })
+            .eq("id", emailData.id);
+
+          if (updateError) {
+            console.error("Error linking staff account:", updateError);
+          } else {
+            console.log("Staff account linked successfully");
+          }
+          
+          data = { ...emailData, user_id: userId };
+        }
+      }
+
+      if (data) {
         setStaff(data);
         setIsStaff(true);
       } else {

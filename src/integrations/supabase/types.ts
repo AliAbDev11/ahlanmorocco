@@ -462,7 +462,20 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      get_staff_by_email: {
+        Args: { staff_email: string }
+        Returns: {
+          created_at: string
+          department: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          phone_number: string
+          role: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
