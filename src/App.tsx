@@ -28,6 +28,20 @@ import OrdersManagement from "./pages/staff/OrdersManagement";
 import ServiceRequestsManagement from "./pages/staff/ServiceRequestsManagement";
 import ReclamationsManagement from "./pages/staff/ReclamationsManagement";
 
+// Manager imports
+import ManagerLogin from "./pages/manager/ManagerLogin";
+import ManagerLayout from "./components/manager/ManagerLayout";
+import ManagerProtectedRoute from "./components/manager/ManagerProtectedRoute";
+import ManagerDashboard from "./pages/manager/ManagerDashboard";
+import ManagerGuests from "./pages/manager/ManagerGuests";
+import ManagerRooms from "./pages/manager/ManagerRooms";
+import ManagerOrders from "./pages/manager/ManagerOrders";
+import ManagerServiceRequests from "./pages/manager/ManagerServiceRequests";
+import ManagerComplaints from "./pages/manager/ManagerComplaints";
+import ManagerStaff from "./pages/manager/ManagerStaff";
+import ManagerReports from "./pages/manager/ManagerReports";
+import ManagerSettings from "./pages/manager/ManagerSettings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -66,6 +80,26 @@ const App = () => (
               <Route path="/staff/orders" element={<OrdersManagement />} />
               <Route path="/staff/requests" element={<ServiceRequestsManagement />} />
               <Route path="/staff/reclamations" element={<ReclamationsManagement />} />
+            </Route>
+
+            {/* Manager Routes */}
+            <Route path="/manager/login" element={<ManagerLogin />} />
+            <Route
+              element={
+                <ManagerProtectedRoute>
+                  <ManagerLayout />
+                </ManagerProtectedRoute>
+              }
+            >
+              <Route path="/manager" element={<ManagerDashboard />} />
+              <Route path="/manager/guests" element={<ManagerGuests />} />
+              <Route path="/manager/rooms" element={<ManagerRooms />} />
+              <Route path="/manager/orders" element={<ManagerOrders />} />
+              <Route path="/manager/requests" element={<ManagerServiceRequests />} />
+              <Route path="/manager/complaints" element={<ManagerComplaints />} />
+              <Route path="/manager/staff" element={<ManagerStaff />} />
+              <Route path="/manager/reports" element={<ManagerReports />} />
+              <Route path="/manager/settings" element={<ManagerSettings />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
