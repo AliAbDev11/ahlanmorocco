@@ -45,7 +45,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { guest, loading: guestLoading } = useGuestProfile();
-  const { user, loading: authLoading } = useAuth();
+  const { user, guestSession, loading: authLoading, isAuthenticated } = useAuth();
 
   const currentLanguage = i18n.language;
 
@@ -54,12 +54,12 @@ const Dashboard = () => {
     localStorage.setItem('language', langCode);
   };
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (neither Supabase user nor guest session)
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/login");
+    if (!authLoading && !isAuthenticated) {
+      navigate("/");
     }
-  }, [user, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const formatCheckoutDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -67,9 +67,13 @@ const Dashboard = () => {
     return format(date, "EEEE, MMMM d, yyyy", { locale });
   };
 
-  // Get display name from guest profile or user email
+  // Get display name from guest session, guest profile, or user email
   const getDisplayName = () => {
+    // First check guest session (from QR code login)
+    if (guestSession?.fullName) return guestSession.fullName;
+    // Then check guest profile (from Supabase)
     if (guest?.full_name) return guest.full_name;
+    // Finally fall back to user email
     if (user?.email) {
       const namePart = user.email.split("@")[0];
       return namePart
@@ -85,7 +89,10 @@ const Dashboard = () => {
   };
 
   const displayName = getDisplayName();
-  const roomNumber = guest?.room_number || t("common.notAssigned");
+  // Get room number from guest session or guest profile
+  const roomNumber = guestSession?.roomNumber || guest?.room_number || t("common.notAssigned");
+  // Get checkout date from guest session or guest profile
+  const checkOutDate = guestSession?.checkOutDate || guest?.check_out_date;
 
   // Get translated quick actions
   const quickActions = [
@@ -174,8 +181,8 @@ const Dashboard = () => {
               </h1>
               <p className="text-primary-foreground/80 flex items-center gap-2 text-sm">
                 <Clock className="w-4 h-4" />
-                {roomNumber} • {guest?.check_out_date 
-                  ? `${t("common.checkout")}: ${formatCheckoutDate(guest.check_out_date)}`
+                {roomNumber} • {checkOutDate 
+                  ? `${t("common.checkout")}: ${formatCheckoutDate(checkOutDate)}`
                   : t("common.welcomeHotel")}
               </p>
             </div>
