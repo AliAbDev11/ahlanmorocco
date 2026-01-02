@@ -38,7 +38,7 @@ const GuestManagement = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
-  const [generatedQR, setGeneratedQR] = useState<{ token: string; guestName: string } | null>(null);
+  const [generatedQR, setGeneratedQR] = useState<{ url: string; guestName: string } | null>(null);
   const { toast } = useToast();
 
   // Form state
@@ -126,6 +126,10 @@ const GuestManagement = () => {
       const token = generateToken();
       const guestId = crypto.randomUUID();
 
+      // Generate the full guest access URL
+      const appBaseUrl = window.location.origin;
+      const guestAccessUrl = `${appBaseUrl}/guest-access?token=${token}`;
+
       // Create guest
       const { error: guestError } = await supabase.from("guests").insert({
         id: guestId,
@@ -141,18 +145,14 @@ const GuestManagement = () => {
 
       if (guestError) throw guestError;
 
-      // Create access token
+      // Create access token with full URL
       const expiresAt = new Date(formData.check_out_date);
       expiresAt.setHours(23, 59, 59, 999);
 
       const { error: tokenError } = await supabase.from("guest_access_tokens").insert({
         guest_id: guestId,
         token: token,
-        qr_code_data: JSON.stringify({
-          token,
-          guest_id: guestId,
-          hotel: "Ahlan Hotel",
-        }),
+        qr_code_data: guestAccessUrl,
         expires_at: expiresAt.toISOString(),
         is_active: true,
       });
@@ -167,8 +167,8 @@ const GuestManagement = () => {
         description: "Guest added successfully",
       });
 
-      // Show QR code dialog
-      setGeneratedQR({ token, guestName: formData.full_name });
+      // Show QR code dialog with full URL
+      setGeneratedQR({ url: guestAccessUrl, guestName: formData.full_name });
       setQrDialogOpen(true);
       setIsAddDialogOpen(false);
       
@@ -364,7 +364,7 @@ const GuestManagement = () => {
             <div className="flex flex-col items-center space-y-4 p-4">
               <p className="text-lg font-medium">{generatedQR.guestName}</p>
               <div className="bg-white p-4 rounded-lg">
-                <QRCode value={generatedQR.token} size={200} />
+                <QRCode value={generatedQR.url} size={200} />
               </div>
               <p className="text-sm text-muted-foreground text-center">
                 Guest can scan this QR code to access hotel services
@@ -461,7 +461,9 @@ const GuestManagement = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setGeneratedQR({ token: guest.qr_code!, guestName: guest.full_name });
+                          const appBaseUrl = window.location.origin;
+                          const guestAccessUrl = `${appBaseUrl}/guest-access?token=${guest.qr_code}`;
+                          setGeneratedQR({ url: guestAccessUrl, guestName: guest.full_name });
                           setQrDialogOpen(true);
                         }}
                       >
