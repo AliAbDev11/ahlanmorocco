@@ -16,6 +16,17 @@ import Requests from "./pages/Requests";
 import MainLayout from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
 
+// Staff imports
+import StaffLogin from "./pages/staff/StaffLogin";
+import StaffLayout from "./components/staff/StaffLayout";
+import StaffProtectedRoute from "./components/staff/StaffProtectedRoute";
+import StaffDashboard from "./pages/staff/StaffDashboard";
+import GuestManagement from "./pages/staff/GuestManagement";
+import RoomManagement from "./pages/staff/RoomManagement";
+import OrdersManagement from "./pages/staff/OrdersManagement";
+import ServiceRequestsManagement from "./pages/staff/ServiceRequestsManagement";
+import ReclamationsManagement from "./pages/staff/ReclamationsManagement";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -37,6 +48,24 @@ const App = () => (
               <Route path="/guide" element={<LocalGuide />} />
               <Route path="/requests" element={<Requests />} />
             </Route>
+            
+            {/* Staff Routes */}
+            <Route path="/staff/login" element={<StaffLogin />} />
+            <Route
+              element={
+                <StaffProtectedRoute>
+                  <StaffLayout />
+                </StaffProtectedRoute>
+              }
+            >
+              <Route path="/staff" element={<StaffDashboard />} />
+              <Route path="/staff/guests" element={<GuestManagement />} />
+              <Route path="/staff/rooms" element={<RoomManagement />} />
+              <Route path="/staff/orders" element={<OrdersManagement />} />
+              <Route path="/staff/requests" element={<ServiceRequestsManagement />} />
+              <Route path="/staff/reclamations" element={<ReclamationsManagement />} />
+            </Route>
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
