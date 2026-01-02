@@ -15,6 +15,7 @@ import LocalGuide from "./pages/LocalGuide";
 import Requests from "./pages/Requests";
 import MainLayout from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
+import GuestAccess from "./pages/GuestAccess";
 
 // Staff imports
 import StaffLogin from "./pages/staff/StaffLogin";
@@ -39,6 +40,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/guest-access" element={<GuestAccess />} />
             <Route element={<MainLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/chatbot" element={<Chatbot />} />

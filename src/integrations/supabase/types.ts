@@ -112,7 +112,7 @@ export type Database = {
           check_out_date: string
           created_at?: string | null
           full_name: string
-          id: string
+          id?: string
           is_active?: boolean | null
           phone_number?: string | null
           qr_code?: string | null
