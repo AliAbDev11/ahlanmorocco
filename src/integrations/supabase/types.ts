@@ -14,6 +14,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          staff_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          staff_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_access_tokens: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          guest_id: string
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          qr_code_data: string
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          guest_id: string
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          qr_code_data: string
+          token: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          guest_id?: string
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          qr_code_data?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_access_tokens_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guests: {
         Row: {
           check_in_date: string
@@ -23,6 +102,8 @@ export type Database = {
           id: string
           is_active: boolean | null
           phone_number: string | null
+          qr_code: string | null
+          room_id: string | null
           room_number: string
           updated_at: string | null
         }
@@ -34,6 +115,8 @@ export type Database = {
           id: string
           is_active?: boolean | null
           phone_number?: string | null
+          qr_code?: string | null
+          room_id?: string | null
           room_number: string
           updated_at?: string | null
         }
@@ -45,10 +128,20 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           phone_number?: string | null
+          qr_code?: string | null
+          room_id?: string | null
           room_number?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "guests_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hotel_services: {
         Row: {
@@ -160,6 +253,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          assigned_to: string | null
+          completed_at: string | null
           created_at: string | null
           delivery_time: string | null
           guest_id: string | null
@@ -172,6 +267,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
           created_at?: string | null
           delivery_time?: string | null
           guest_id?: string | null
@@ -184,6 +281,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
           created_at?: string | null
           delivery_time?: string | null
           guest_id?: string | null
@@ -207,6 +306,7 @@ export type Database = {
       }
       reclamations: {
         Row: {
+          assigned_to: string | null
           category: string
           created_at: string | null
           description: string
@@ -219,6 +319,7 @@ export type Database = {
           urgency: string | null
         }
         Insert: {
+          assigned_to?: string | null
           category: string
           created_at?: string | null
           description: string
@@ -231,6 +332,7 @@ export type Database = {
           urgency?: string | null
         }
         Update: {
+          assigned_to?: string | null
           category?: string
           created_at?: string | null
           description?: string
@@ -252,8 +354,55 @@ export type Database = {
           },
         ]
       }
+      rooms: {
+        Row: {
+          amenities: Json | null
+          capacity: number | null
+          created_at: string | null
+          description: string | null
+          floor: number | null
+          id: string
+          image_url: string | null
+          price_per_night: number
+          room_number: string
+          room_type: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amenities?: Json | null
+          capacity?: number | null
+          created_at?: string | null
+          description?: string | null
+          floor?: number | null
+          id?: string
+          image_url?: string | null
+          price_per_night: number
+          room_number: string
+          room_type: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amenities?: Json | null
+          capacity?: number | null
+          created_at?: string | null
+          description?: string | null
+          floor?: number | null
+          id?: string
+          image_url?: string | null
+          price_per_night?: number
+          room_number?: string
+          room_type?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       service_requests: {
         Row: {
+          assigned_to: string | null
+          completed_at: string | null
           created_at: string | null
           description: string | null
           guest_id: string | null
@@ -265,6 +414,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
           created_at?: string | null
           description?: string | null
           guest_id?: string | null
@@ -276,6 +427,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
           created_at?: string | null
           description?: string | null
           guest_id?: string | null
@@ -296,12 +449,64 @@ export type Database = {
           },
         ]
       }
+      staff: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean | null
+          phone_number: string | null
+          role: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          phone_number?: string | null
+          role: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          phone_number?: string | null
+          role?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_staff_by_email: {
+        Args: { staff_email: string }
+        Returns: {
+          created_at: string
+          department: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          phone_number: string
+          role: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
