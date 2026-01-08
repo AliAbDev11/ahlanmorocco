@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
@@ -19,27 +20,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
   Wrench, 
   Clock, 
   CheckCircle,
   Search,
   AlertCircle,
-  Timer
+  Timer,
+  Eye,
+  Edit,
+  Download
 } from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
 import { format, parseISO, differenceInMinutes } from 'date-fns';
+import { toast } from 'sonner';
+import TableActionsMenu, { ActionItem } from '@/components/manager/TableActionsMenu';
+import TablePagination from '@/components/manager/TablePagination';
 
 interface ServiceRequest {
   id: string;
@@ -61,8 +63,6 @@ interface RequestStats {
   avgResponseTime: number;
 }
 
-const COLORS = ['#f97316', '#3b82f6', '#22c55e', '#8b5cf6'];
-
 const ManagerServiceRequests = () => {
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,8 +76,18 @@ const ManagerServiceRequests = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [typeStats, setTypeStats] = useState<any[]>([]);
-  const [statusDistribution, setStatusDistribution] = useState<any[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Column filters
+  const [columnFilters, setColumnFilters] = useState({
+    room: '',
+    type: ''
+  });
 
   useEffect(() => {
     fetchRequests();
@@ -95,12 +105,10 @@ const ManagerServiceRequests = () => {
       const requestList = data || [];
       setRequests(requestList);
 
-      // Calculate stats
       const pending = requestList.filter(r => r.status === 'pending').length;
       const inProgress = requestList.filter(r => r.status === 'in_progress').length;
       const completed = requestList.filter(r => r.status === 'completed').length;
 
-      // Calculate average response time for completed requests
       const completedRequests = requestList.filter(r => r.status === 'completed' && r.completed_at);
       const avgTime = completedRequests.length > 0
         ? completedRequests.reduce((sum, r) => {
@@ -115,27 +123,67 @@ const ManagerServiceRequests = () => {
         completed,
         avgResponseTime: Math.round(avgTime)
       });
-
-      // Calculate type distribution
-      const types: Record<string, number> = {};
-      requestList.forEach(req => {
-        const type = req.service_type || 'Other';
-        types[type] = (types[type] || 0) + 1;
-      });
-      setTypeStats(Object.entries(types).map(([name, value]) => ({ name, value })));
-
-      // Status distribution
-      setStatusDistribution([
-        { name: 'Pending', value: pending },
-        { name: 'In Progress', value: inProgress },
-        { name: 'Completed', value: completed }
-      ].filter(d => d.value > 0));
-
     } catch (error) {
       console.error('Error fetching requests:', error);
+      toast.error('Failed to fetch service requests');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpdateStatus = async (request: ServiceRequest, newStatus: string) => {
+    try {
+      const updateData: any = { status: newStatus };
+      if (newStatus === 'completed') {
+        updateData.completed_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('service_requests')
+        .update(updateData)
+        .eq('id', request.id);
+
+      if (error) throw error;
+
+      toast.success(`Request status updated to ${newStatus}`);
+      fetchRequests();
+    } catch (error) {
+      console.error('Error updating request:', error);
+      toast.error('Failed to update request status');
+    }
+  };
+
+  const getRequestActions = (request: ServiceRequest): ActionItem[] => {
+    const actions: ActionItem[] = [
+      {
+        label: 'View Details',
+        icon: <Eye className="w-4 h-4" />,
+        onClick: () => {
+          setSelectedRequest(request);
+          setDetailsOpen(true);
+        }
+      }
+    ];
+
+    if (request.status === 'pending') {
+      actions.push({
+        label: 'Start Processing',
+        icon: <Edit className="w-4 h-4" />,
+        onClick: () => handleUpdateStatus(request, 'in_progress'),
+        separator: true
+      });
+    }
+
+    if (request.status === 'in_progress') {
+      actions.push({
+        label: 'Mark as Completed',
+        icon: <CheckCircle className="w-4 h-4" />,
+        onClick: () => handleUpdateStatus(request, 'completed'),
+        separator: true
+      });
+    }
+
+    return actions;
   };
 
   const serviceTypes = [...new Set(requests.map(r => r.service_type))];
@@ -149,8 +197,39 @@ const ManagerServiceRequests = () => {
     const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
     const matchesType = typeFilter === 'all' || request.service_type === typeFilter;
 
-    return matchesSearch && matchesStatus && matchesType;
+    const matchesColumnFilters = 
+      request.room_number.toLowerCase().includes(columnFilters.room.toLowerCase()) &&
+      request.service_type.toLowerCase().includes(columnFilters.type.toLowerCase());
+
+    return matchesSearch && matchesStatus && matchesType && matchesColumnFilters;
   });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredRequests.length / pageSize);
+  const paginatedRequests = filteredRequests.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const exportToCSV = () => {
+    const csvContent = [
+      ['Room', 'Service Type', 'Status', 'Created', 'Completed'].join(','),
+      ...filteredRequests.map(req => [
+        req.room_number,
+        req.service_type,
+        req.status,
+        format(parseISO(req.created_at), 'yyyy-MM-dd HH:mm'),
+        req.completed_at ? format(parseISO(req.completed_at), 'yyyy-MM-dd HH:mm') : ''
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `service_requests_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -168,11 +247,17 @@ const ManagerServiceRequests = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-serif font-bold text-foreground">Service Requests</h1>
-        <p className="text-muted-foreground mt-1">
-          Monitor service requests, response times, and staff performance.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-serif font-bold text-foreground">Service Requests</h1>
+          <p className="text-muted-foreground mt-1">
+            Monitor and manage service requests from guests.
+          </p>
+        </div>
+        <Button onClick={exportToCSV} variant="outline" className="gap-2">
+          <Download className="w-4 h-4" />
+          Export CSV
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -244,90 +329,6 @@ const ManagerServiceRequests = () => {
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Requests by Type */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Requests by Type</CardTitle>
-            <CardDescription>Distribution of service request categories</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : typeStats.length === 0 ? (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No data available
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={typeStats} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    width={100}
-                    tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} 
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Bar dataKey="value" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Status Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Status Distribution</CardTitle>
-            <CardDescription>Current request status breakdown</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : statusDistribution.length === 0 ? (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No data available
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={statusDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
-                  >
-                    {statusDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -383,50 +384,138 @@ const ManagerServiceRequests = () => {
               ))}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Room</TableHead>
-                  <TableHead>Service Type</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Requested</TableHead>
-                  <TableHead>Completed</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRequests.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No service requests found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredRequests.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell>
-                        <Badge variant="outline">{request.room_number}</Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{request.service_type}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {request.description || '-'}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(request.status)}</TableCell>
-                      <TableCell>{format(parseISO(request.created_at), 'MMM dd, HH:mm')}</TableCell>
-                      <TableCell>
-                        {request.completed_at 
-                          ? format(parseISO(request.completed_at), 'MMM dd, HH:mm')
-                          : '-'
-                        }
-                      </TableCell>
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Room</TableHead>
+                      <TableHead>Service Type</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Requested</TableHead>
+                      <TableHead>Completed</TableHead>
+                      <TableHead className="w-[50px]">Actions</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                    {/* Column Filters */}
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="py-2">
+                        <Input
+                          placeholder="Filter room..."
+                          value={columnFilters.room}
+                          onChange={(e) => setColumnFilters({ ...columnFilters, room: e.target.value })}
+                          className="h-8 text-xs"
+                        />
+                      </TableHead>
+                      <TableHead className="py-2">
+                        <Input
+                          placeholder="Filter type..."
+                          value={columnFilters.type}
+                          onChange={(e) => setColumnFilters({ ...columnFilters, type: e.target.value })}
+                          className="h-8 text-xs"
+                        />
+                      </TableHead>
+                      <TableHead colSpan={5}></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedRequests.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          No service requests found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      paginatedRequests.map((request) => (
+                        <TableRow key={request.id}>
+                          <TableCell>
+                            <Badge variant="outline">{request.room_number}</Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">{request.service_type}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">
+                            {request.description || '-'}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(request.status)}</TableCell>
+                          <TableCell>{format(parseISO(request.created_at), 'MMM dd, HH:mm')}</TableCell>
+                          <TableCell>
+                            {request.completed_at 
+                              ? format(parseISO(request.completed_at), 'MMM dd, HH:mm')
+                              : '-'
+                            }
+                          </TableCell>
+                          <TableCell>
+                            <TableActionsMenu actions={getRequestActions(request)} />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              <TablePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={filteredRequests.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setCurrentPage(1);
+                }}
+              />
+            </>
           )}
         </CardContent>
       </Card>
+
+      {/* Request Details Dialog */}
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wrench className="w-5 h-5 text-accent" />
+              Request Details
+            </DialogTitle>
+            <DialogDescription>
+              Service request information
+            </DialogDescription>
+          </DialogHeader>
+          {selectedRequest && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Room</p>
+                  <p className="font-medium">{selectedRequest.room_number}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  {getStatusBadge(selectedRequest.status)}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Service Type</p>
+                  <p className="font-medium">{selectedRequest.service_type}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Created</p>
+                  <p className="font-medium">{format(parseISO(selectedRequest.created_at), 'PPp')}</p>
+                </div>
+              </div>
+              {selectedRequest.description && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Description</p>
+                  <p className="font-medium">{selectedRequest.description}</p>
+                </div>
+              )}
+              {selectedRequest.completed_at && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Completed</p>
+                  <p className="font-medium">{format(parseISO(selectedRequest.completed_at), 'PPp')}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
