@@ -71,11 +71,11 @@ const ManagerLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex w-full">
-      {/* Sidebar */}
+    <div className="h-screen bg-background flex w-full overflow-hidden">
+      {/* Fixed Sidebar */}
       <aside 
         className={cn(
-          "bg-card border-r border-border flex flex-col transition-all duration-300",
+          "fixed left-0 top-0 h-screen bg-card border-r border-border flex flex-col transition-all duration-300 z-50",
           collapsed ? "w-16" : "w-64"
         )}
       >
@@ -151,10 +151,15 @@ const ManagerLayout = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
-        <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
+      {/* Main Content with offset for fixed sidebar */}
+      <div 
+        className={cn(
+          "flex-1 flex flex-col h-screen transition-all duration-300",
+          collapsed ? "ml-16" : "ml-64"
+        )}
+      >
+        {/* Sticky Top Bar */}
+        <header className="sticky top-0 z-40 h-16 bg-card border-b border-border flex items-center justify-between px-6">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-accent" />
             <h1 className="text-lg font-serif font-semibold text-foreground">
@@ -228,8 +233,8 @@ const ManagerLayout = () => {
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto p-6 bg-muted/30">
+        {/* Scrollable Page Content */}
+        <main className="flex-1 overflow-y-auto p-6 bg-muted/30">
           <Outlet />
         </main>
       </div>
