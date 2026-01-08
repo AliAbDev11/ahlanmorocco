@@ -20,29 +20,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
   ShoppingCart, 
   DollarSign, 
   TrendingUp,
   Search,
   Download,
-  Calendar
+  Calendar,
+  Eye,
+  Edit,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
-import { format, subDays, startOfDay, endOfDay, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import { toast } from 'sonner';
+import TableActionsMenu, { ActionItem } from '@/components/manager/TableActionsMenu';
+import TablePagination from '@/components/manager/TablePagination';
+import ConfirmDialog from '@/components/manager/ConfirmDialog';
 
 interface Order {
   id: string;
@@ -64,8 +65,6 @@ interface OrderStats {
   completedOrders: number;
 }
 
-const COLORS = ['hsl(var(--accent))', 'hsl(var(--primary))', 'hsl(var(--destructive))', '#22c55e', '#8b5cf6'];
-
 const ManagerOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,8 +77,20 @@ const ManagerOrders = () => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [revenueData, setRevenueData] = useState<any[]>([]);
-  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Column filters
+  const [columnFilters, setColumnFilters] = useState({
+    room: '',
+    orderId: ''
+  });
 
   useEffect(() => {
     fetchOrders();
@@ -97,7 +108,6 @@ const ManagerOrders = () => {
       const orderList = data || [];
       setOrders(orderList);
 
-      // Calculate stats
       const totalRevenue = orderList.reduce((sum, order) => sum + (order.total_price || 0), 0);
       const pendingOrders = orderList.filter(o => o.status === 'pending').length;
       const completedOrders = orderList.filter(o => o.status === 'completed').length;
@@ -109,48 +119,101 @@ const ManagerOrders = () => {
         pendingOrders,
         completedOrders
       });
-
-      // Generate revenue data for last 14 days
-      const revenueByDay: Record<string, number> = {};
-      for (let i = 13; i >= 0; i--) {
-        const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
-        revenueByDay[date] = 0;
-      }
-
-      orderList.forEach(order => {
-        const orderDate = format(parseISO(order.created_at), 'yyyy-MM-dd');
-        if (revenueByDay.hasOwnProperty(orderDate)) {
-          revenueByDay[orderDate] += order.total_price || 0;
-        }
-      });
-
-      setRevenueData(Object.entries(revenueByDay).map(([date, revenue]) => ({
-        date: format(parseISO(date), 'MMM dd'),
-        revenue
-      })));
-
-      // Calculate category distribution (mock based on items structure)
-      const categories: Record<string, number> = {
-        'Food': 0,
-        'Beverages': 0,
-        'Room Service': 0,
-        'Desserts': 0,
-        'Other': 0
-      };
-      
-      // For demo, distribute revenue across categories
-      const revenuePerCategory = totalRevenue / Object.keys(categories).length;
-      Object.keys(categories).forEach(cat => {
-        categories[cat] = Math.floor(revenuePerCategory * (0.5 + Math.random()));
-      });
-
-      setCategoryData(Object.entries(categories).map(([name, value]) => ({ name, value })));
-
     } catch (error) {
       console.error('Error fetching orders:', error);
+      toast.error('Failed to fetch orders');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpdateStatus = async (order: Order, newStatus: string) => {
+    try {
+      const updateData: any = { status: newStatus };
+      if (newStatus === 'completed') {
+        updateData.completed_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('id', order.id);
+
+      if (error) throw error;
+
+      toast.success(`Order status updated to ${newStatus}`);
+      fetchOrders();
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast.error('Failed to update order status');
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!orderToCancel) return;
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', orderToCancel.id);
+
+      if (error) throw error;
+
+      toast.success('Order cancelled successfully');
+      setCancelConfirmOpen(false);
+      setOrderToCancel(null);
+      fetchOrders();
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      toast.error('Failed to cancel order');
+    }
+  };
+
+  const getOrderActions = (order: Order): ActionItem[] => {
+    const actions: ActionItem[] = [
+      {
+        label: 'View Details',
+        icon: <Eye className="w-4 h-4" />,
+        onClick: () => {
+          setSelectedOrder(order);
+          setDetailsOpen(true);
+        }
+      }
+    ];
+
+    if (order.status === 'pending') {
+      actions.push({
+        label: 'Mark as Preparing',
+        icon: <Edit className="w-4 h-4" />,
+        onClick: () => handleUpdateStatus(order, 'preparing'),
+        separator: true
+      });
+    }
+
+    if (order.status === 'preparing') {
+      actions.push({
+        label: 'Mark as Completed',
+        icon: <CheckCircle className="w-4 h-4" />,
+        onClick: () => handleUpdateStatus(order, 'completed'),
+        separator: true
+      });
+    }
+
+    if (order.status !== 'completed' && order.status !== 'cancelled') {
+      actions.push({
+        label: 'Cancel Order',
+        icon: <XCircle className="w-4 h-4" />,
+        onClick: () => {
+          setOrderToCancel(order);
+          setCancelConfirmOpen(true);
+        },
+        variant: 'destructive',
+        separator: true
+      });
+    }
+
+    return actions;
   };
 
   const filteredOrders = orders.filter(order => {
@@ -160,8 +223,19 @@ const ManagerOrders = () => {
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    const matchesColumnFilters = 
+      order.room_number.toLowerCase().includes(columnFilters.room.toLowerCase()) &&
+      order.id.toLowerCase().includes(columnFilters.orderId.toLowerCase());
+
+    return matchesSearch && matchesStatus && matchesColumnFilters;
   });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredOrders.length / pageSize);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const exportToCSV = () => {
     const csvContent = [
@@ -205,7 +279,7 @@ const ManagerOrders = () => {
         <div>
           <h1 className="text-3xl font-serif font-bold text-foreground">Orders & Revenue</h1>
           <p className="text-muted-foreground mt-1">
-            Track orders, analyze revenue patterns, and generate reports.
+            Track orders and manage order statuses.
           </p>
         </div>
         <Button onClick={exportToCSV} variant="outline" className="gap-2">
@@ -283,92 +357,6 @@ const ManagerOrders = () => {
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Revenue Trend</CardTitle>
-            <CardDescription>Daily revenue for the last 14 days</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                    tickFormatter={(value) => `$${value}`}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                    formatter={(value: number) => [`$${value.toFixed(2)}`, 'Revenue']}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="hsl(var(--accent))" 
-                    strokeWidth={2}
-                    dot={{ fill: 'hsl(var(--accent))' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Revenue by Category */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Revenue by Category</CardTitle>
-            <CardDescription>Distribution across order categories</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    labelLine={false}
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                    formatter={(value: number) => [`$${value.toFixed(2)}`, 'Revenue']}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -414,43 +402,144 @@ const ManagerOrders = () => {
               ))}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Room</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Delivery Time</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No orders found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredOrders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-mono text-xs">{order.id.slice(0, 8)}...</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{order.room_number}</Badge>
-                      </TableCell>
-                      <TableCell className="font-medium text-accent">${order.total_price?.toFixed(2)}</TableCell>
-                      <TableCell>{getStatusBadge(order.status)}</TableCell>
-                      <TableCell>{format(parseISO(order.created_at), 'MMM dd, HH:mm')}</TableCell>
-                      <TableCell>{order.delivery_time || '-'}</TableCell>
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order ID</TableHead>
+                      <TableHead>Room</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Delivery Time</TableHead>
+                      <TableHead className="w-[50px]">Actions</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                    {/* Column Filters */}
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="py-2">
+                        <Input
+                          placeholder="Filter ID..."
+                          value={columnFilters.orderId}
+                          onChange={(e) => setColumnFilters({ ...columnFilters, orderId: e.target.value })}
+                          className="h-8 text-xs"
+                        />
+                      </TableHead>
+                      <TableHead className="py-2">
+                        <Input
+                          placeholder="Filter room..."
+                          value={columnFilters.room}
+                          onChange={(e) => setColumnFilters({ ...columnFilters, room: e.target.value })}
+                          className="h-8 text-xs"
+                        />
+                      </TableHead>
+                      <TableHead colSpan={5}></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedOrders.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          No orders found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      paginatedOrders.map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell className="font-mono text-xs">{order.id.slice(0, 8)}...</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{order.room_number}</Badge>
+                          </TableCell>
+                          <TableCell className="font-medium text-accent">${order.total_price?.toFixed(2)}</TableCell>
+                          <TableCell>{getStatusBadge(order.status)}</TableCell>
+                          <TableCell>{format(parseISO(order.created_at), 'MMM dd, HH:mm')}</TableCell>
+                          <TableCell>{order.delivery_time || '-'}</TableCell>
+                          <TableCell>
+                            <TableActionsMenu actions={getOrderActions(order)} />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              <TablePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={filteredOrders.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setCurrentPage(1);
+                }}
+              />
+            </>
           )}
         </CardContent>
       </Card>
+
+      {/* Order Details Dialog */}
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShoppingCart className="w-5 h-5 text-accent" />
+              Order Details
+            </DialogTitle>
+            <DialogDescription>
+              Order #{selectedOrder?.id.slice(0, 8)}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Room</p>
+                  <p className="font-medium">{selectedOrder.room_number}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  {getStatusBadge(selectedOrder.status)}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Total</p>
+                  <p className="font-medium text-accent">${selectedOrder.total_price?.toFixed(2)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Date</p>
+                  <p className="font-medium">{format(parseISO(selectedOrder.created_at), 'PPp')}</p>
+                </div>
+              </div>
+              {selectedOrder.special_requests && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Special Requests</p>
+                  <p className="font-medium">{selectedOrder.special_requests}</p>
+                </div>
+              )}
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Items</p>
+                <div className="bg-muted p-3 rounded-lg">
+                  <pre className="text-xs overflow-auto">
+                    {JSON.stringify(selectedOrder.items, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Confirmation Dialog */}
+      <ConfirmDialog
+        open={cancelConfirmOpen}
+        onOpenChange={setCancelConfirmOpen}
+        title="Cancel Order"
+        description={`Are you sure you want to cancel this order for room ${orderToCancel?.room_number}?`}
+        confirmLabel="Cancel Order"
+        onConfirm={handleCancelOrder}
+        variant="destructive"
+      />
     </div>
   );
 };

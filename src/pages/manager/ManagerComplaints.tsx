@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
@@ -26,7 +27,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { 
   MessageSquareWarning, 
   AlertTriangle, 
@@ -34,21 +34,14 @@ import {
   Search,
   AlertCircle,
   Eye,
-  Clock
+  Edit,
+  Clock,
+  Download
 } from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
 import { format, parseISO, differenceInHours } from 'date-fns';
+import { toast } from 'sonner';
+import TableActionsMenu, { ActionItem } from '@/components/manager/TableActionsMenu';
+import TablePagination from '@/components/manager/TablePagination';
 
 interface Complaint {
   id: string;
@@ -71,7 +64,6 @@ interface ComplaintStats {
   avgResolutionTime: number;
 }
 
-const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
 const URGENCY_COLORS: Record<string, string> = {
   critical: '#ef4444',
   high: '#f97316',
@@ -93,10 +85,18 @@ const ManagerComplaints = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
-  const [categoryStats, setCategoryStats] = useState<any[]>([]);
-  const [urgencyDistribution, setUrgencyDistribution] = useState<any[]>([]);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Column filters
+  const [columnFilters, setColumnFilters] = useState({
+    room: '',
+    category: ''
+  });
 
   useEffect(() => {
     fetchComplaints();
@@ -114,13 +114,11 @@ const ManagerComplaints = () => {
       const complaintList = data || [];
       setComplaints(complaintList);
 
-      // Calculate stats
       const open = complaintList.filter(c => c.status === 'open').length;
       const inProgress = complaintList.filter(c => c.status === 'in_progress').length;
       const resolved = complaintList.filter(c => c.status === 'resolved').length;
       const critical = complaintList.filter(c => c.urgency === 'critical').length;
 
-      // Calculate average resolution time
       const resolvedComplaints = complaintList.filter(c => c.status === 'resolved' && c.resolved_at);
       const avgTime = resolvedComplaints.length > 0
         ? resolvedComplaints.reduce((sum, c) => {
@@ -136,31 +134,67 @@ const ManagerComplaints = () => {
         critical,
         avgResolutionTime: Math.round(avgTime)
       });
-
-      // Calculate category distribution
-      const categories: Record<string, number> = {};
-      complaintList.forEach(complaint => {
-        const cat = complaint.category || 'Other';
-        categories[cat] = (categories[cat] || 0) + 1;
-      });
-      setCategoryStats(Object.entries(categories).map(([name, value]) => ({ name, value })));
-
-      // Urgency distribution
-      const urgencies: Record<string, number> = {};
-      complaintList.forEach(complaint => {
-        const urg = complaint.urgency || 'medium';
-        urgencies[urg] = (urgencies[urg] || 0) + 1;
-      });
-      setUrgencyDistribution(Object.entries(urgencies).map(([name, value]) => ({ 
-        name: name.charAt(0).toUpperCase() + name.slice(1), 
-        value 
-      })));
-
     } catch (error) {
       console.error('Error fetching complaints:', error);
+      toast.error('Failed to fetch complaints');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpdateStatus = async (complaint: Complaint, newStatus: string) => {
+    try {
+      const updateData: any = { status: newStatus };
+      if (newStatus === 'resolved') {
+        updateData.resolved_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('reclamations')
+        .update(updateData)
+        .eq('id', complaint.id);
+
+      if (error) throw error;
+
+      toast.success(`Complaint status updated to ${newStatus}`);
+      fetchComplaints();
+    } catch (error) {
+      console.error('Error updating complaint:', error);
+      toast.error('Failed to update complaint status');
+    }
+  };
+
+  const getComplaintActions = (complaint: Complaint): ActionItem[] => {
+    const actions: ActionItem[] = [
+      {
+        label: 'View Details',
+        icon: <Eye className="w-4 h-4" />,
+        onClick: () => {
+          setSelectedComplaint(complaint);
+          setDetailsOpen(true);
+        }
+      }
+    ];
+
+    if (complaint.status === 'open') {
+      actions.push({
+        label: 'Start Processing',
+        icon: <Edit className="w-4 h-4" />,
+        onClick: () => handleUpdateStatus(complaint, 'in_progress'),
+        separator: true
+      });
+    }
+
+    if (complaint.status === 'in_progress') {
+      actions.push({
+        label: 'Mark as Resolved',
+        icon: <CheckCircle className="w-4 h-4" />,
+        onClick: () => handleUpdateStatus(complaint, 'resolved'),
+        separator: true
+      });
+    }
+
+    return actions;
   };
 
   const filteredComplaints = complaints.filter(complaint => {
@@ -172,8 +206,40 @@ const ManagerComplaints = () => {
     const matchesStatus = statusFilter === 'all' || complaint.status === statusFilter;
     const matchesUrgency = urgencyFilter === 'all' || complaint.urgency === urgencyFilter;
 
-    return matchesSearch && matchesStatus && matchesUrgency;
+    const matchesColumnFilters = 
+      complaint.room_number.toLowerCase().includes(columnFilters.room.toLowerCase()) &&
+      complaint.category.toLowerCase().includes(columnFilters.category.toLowerCase());
+
+    return matchesSearch && matchesStatus && matchesUrgency && matchesColumnFilters;
   });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredComplaints.length / pageSize);
+  const paginatedComplaints = filteredComplaints.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const exportToCSV = () => {
+    const csvContent = [
+      ['Room', 'Category', 'Urgency', 'Status', 'Created', 'Resolved'].join(','),
+      ...filteredComplaints.map(c => [
+        c.room_number,
+        c.category,
+        c.urgency,
+        c.status,
+        format(parseISO(c.created_at), 'yyyy-MM-dd HH:mm'),
+        c.resolved_at ? format(parseISO(c.resolved_at), 'yyyy-MM-dd HH:mm') : ''
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `complaints_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -200,11 +266,17 @@ const ManagerComplaints = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-serif font-bold text-foreground">Complaints Management</h1>
-        <p className="text-muted-foreground mt-1">
-          Track and resolve guest complaints, analyze patterns, and improve service quality.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-serif font-bold text-foreground">Complaints Management</h1>
+          <p className="text-muted-foreground mt-1">
+            Track and resolve guest complaints.
+          </p>
+        </div>
+        <Button onClick={exportToCSV} variant="outline" className="gap-2">
+          <Download className="w-4 h-4" />
+          Export CSV
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -289,90 +361,6 @@ const ManagerComplaints = () => {
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Complaints by Category */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Complaints by Category</CardTitle>
-            <CardDescription>Most common complaint categories</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : categoryStats.length === 0 ? (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No data available
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={categoryStats} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    width={100}
-                    tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} 
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Bar dataKey="value" fill="hsl(var(--destructive))" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Urgency Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Urgency Distribution</CardTitle>
-            <CardDescription>Breakdown by urgency level</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : urgencyDistribution.length === 0 ? (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No data available
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={urgencyDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
-                  >
-                    {urgencyDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -429,79 +417,103 @@ const ManagerComplaints = () => {
               ))}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Room</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Urgency</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredComplaints.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No complaints found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredComplaints.map((complaint) => (
-                    <TableRow key={complaint.id}>
-                      <TableCell>
-                        <Badge variant="outline">{complaint.room_number}</Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{complaint.category}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {complaint.description}
-                      </TableCell>
-                      <TableCell>{getUrgencyBadge(complaint.urgency)}</TableCell>
-                      <TableCell>{getStatusBadge(complaint.status)}</TableCell>
-                      <TableCell>{format(parseISO(complaint.created_at), 'MMM dd, HH:mm')}</TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedComplaint(complaint);
-                            setDetailsOpen(true);
-                          }}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
-                        </Button>
-                      </TableCell>
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Room</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Urgency</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="w-[50px]">Actions</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                    {/* Column Filters */}
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="py-2">
+                        <Input
+                          placeholder="Filter room..."
+                          value={columnFilters.room}
+                          onChange={(e) => setColumnFilters({ ...columnFilters, room: e.target.value })}
+                          className="h-8 text-xs"
+                        />
+                      </TableHead>
+                      <TableHead className="py-2">
+                        <Input
+                          placeholder="Filter category..."
+                          value={columnFilters.category}
+                          onChange={(e) => setColumnFilters({ ...columnFilters, category: e.target.value })}
+                          className="h-8 text-xs"
+                        />
+                      </TableHead>
+                      <TableHead colSpan={5}></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedComplaints.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          No complaints found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      paginatedComplaints.map((complaint) => (
+                        <TableRow key={complaint.id}>
+                          <TableCell>
+                            <Badge variant="outline">{complaint.room_number}</Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">{complaint.category}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">
+                            {complaint.description}
+                          </TableCell>
+                          <TableCell>{getUrgencyBadge(complaint.urgency)}</TableCell>
+                          <TableCell>{getStatusBadge(complaint.status)}</TableCell>
+                          <TableCell>{format(parseISO(complaint.created_at), 'MMM dd, HH:mm')}</TableCell>
+                          <TableCell>
+                            <TableActionsMenu actions={getComplaintActions(complaint)} />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              <TablePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={filteredComplaints.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setCurrentPage(1);
+                }}
+              />
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Complaint Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <MessageSquareWarning className="w-5 h-5 text-destructive" />
+              <MessageSquareWarning className="w-5 h-5 text-accent" />
               Complaint Details
             </DialogTitle>
             <DialogDescription>
-              Full complaint information
+              Complaint information and status
             </DialogDescription>
           </DialogHeader>
-
           {selectedComplaint && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Room Number</p>
-                  <Badge variant="outline">{selectedComplaint.room_number}</Badge>
+                  <p className="text-sm text-muted-foreground">Room</p>
+                  <p className="font-medium">{selectedComplaint.room_number}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Category</p>
@@ -517,19 +529,18 @@ const ManagerComplaints = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Created</p>
-                  <p className="text-sm">{format(parseISO(selectedComplaint.created_at), 'PPp')}</p>
+                  <p className="font-medium">{format(parseISO(selectedComplaint.created_at), 'PPp')}</p>
                 </div>
                 {selectedComplaint.resolved_at && (
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Resolved</p>
-                    <p className="text-sm">{format(parseISO(selectedComplaint.resolved_at), 'PPp')}</p>
+                    <p className="font-medium">{format(parseISO(selectedComplaint.resolved_at), 'PPp')}</p>
                   </div>
                 )}
               </div>
-
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Description</p>
-                <p className="text-sm p-3 bg-muted rounded-lg">{selectedComplaint.description}</p>
+                <p className="font-medium">{selectedComplaint.description}</p>
               </div>
             </div>
           )}

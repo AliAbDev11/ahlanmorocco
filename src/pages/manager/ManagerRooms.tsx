@@ -23,23 +23,14 @@ import {
   DoorClosed, 
   Wrench, 
   Sparkles,
-  Users,
   DollarSign,
   Bed,
-  Eye
+  Eye,
+  Edit,
+  Download
 } from 'lucide-react';
-import { 
-  PieChart, 
-  Pie, 
-  Cell, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip
-} from 'recharts';
+import { toast } from 'sonner';
+import TableActionsMenu, { ActionItem } from '@/components/manager/TableActionsMenu';
 
 interface Room {
   id: string;
@@ -68,8 +59,6 @@ const statusColors: Record<string, { color: string; bg: string; icon: any }> = {
   cleaning: { color: 'text-yellow-500', bg: 'bg-yellow-500', icon: Sparkles },
 };
 
-const COLORS = ['#22c55e', '#3b82f6', '#f97316', '#eab308'];
-
 const ManagerRooms = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +73,6 @@ const ManagerRooms = () => {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [roomTypeStats, setRoomTypeStats] = useState<any[]>([]);
 
   useEffect(() => {
     fetchRooms();
@@ -102,7 +90,6 @@ const ManagerRooms = () => {
       const roomList = data || [];
       setRooms(roomList);
 
-      // Calculate stats
       const stats: RoomStats = {
         total: roomList.length,
         available: roomList.filter(r => r.status === 'available').length,
@@ -111,39 +98,71 @@ const ManagerRooms = () => {
         cleaning: roomList.filter(r => r.status === 'cleaning').length
       };
       setStats(stats);
-
-      // Calculate room type stats
-      const typeGroups: Record<string, { total: number; occupied: number }> = {};
-      roomList.forEach(room => {
-        if (!typeGroups[room.room_type]) {
-          typeGroups[room.room_type] = { total: 0, occupied: 0 };
-        }
-        typeGroups[room.room_type].total++;
-        if (room.status === 'occupied') {
-          typeGroups[room.room_type].occupied++;
-        }
-      });
-
-      setRoomTypeStats(Object.entries(typeGroups).map(([type, data]) => ({
-        name: type,
-        total: data.total,
-        occupied: data.occupied,
-        occupancyRate: Math.round((data.occupied / data.total) * 100)
-      })));
-
     } catch (error) {
       console.error('Error fetching rooms:', error);
+      toast.error('Failed to fetch rooms');
     } finally {
       setLoading(false);
     }
   };
 
-  const pieData = [
-    { name: 'Available', value: stats.available },
-    { name: 'Occupied', value: stats.occupied },
-    { name: 'Maintenance', value: stats.maintenance },
-    { name: 'Cleaning', value: stats.cleaning }
-  ].filter(d => d.value > 0);
+  const handleUpdateStatus = async (room: Room, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('rooms')
+        .update({ status: newStatus })
+        .eq('id', room.id);
+
+      if (error) throw error;
+
+      toast.success(`Room ${room.room_number} status updated to ${newStatus}`);
+      fetchRooms();
+    } catch (error) {
+      console.error('Error updating room status:', error);
+      toast.error('Failed to update room status');
+    }
+  };
+
+  const getRoomActions = (room: Room): ActionItem[] => {
+    const actions: ActionItem[] = [
+      {
+        label: 'View Details',
+        icon: <Eye className="w-4 h-4" />,
+        onClick: () => {
+          setSelectedRoom(room);
+          setDetailsOpen(true);
+        }
+      }
+    ];
+
+    // Status change options
+    if (room.status !== 'available') {
+      actions.push({
+        label: 'Set Available',
+        icon: <DoorOpen className="w-4 h-4" />,
+        onClick: () => handleUpdateStatus(room, 'available'),
+        separator: true
+      });
+    }
+
+    if (room.status !== 'maintenance') {
+      actions.push({
+        label: 'Set Maintenance',
+        icon: <Wrench className="w-4 h-4" />,
+        onClick: () => handleUpdateStatus(room, 'maintenance')
+      });
+    }
+
+    if (room.status !== 'cleaning') {
+      actions.push({
+        label: 'Set Cleaning',
+        icon: <Sparkles className="w-4 h-4" />,
+        onClick: () => handleUpdateStatus(room, 'cleaning')
+      });
+    }
+
+    return actions;
+  };
 
   const roomTypes = [...new Set(rooms.map(r => r.room_type))];
 
@@ -162,14 +181,41 @@ const ManagerRooms = () => {
     return filteredRooms.filter(r => r.floor === floor);
   };
 
+  const exportToCSV = () => {
+    const csvContent = [
+      ['Room Number', 'Type', 'Status', 'Floor', 'Capacity', 'Price/Night'].join(','),
+      ...rooms.map(room => [
+        room.room_number,
+        room.room_type,
+        room.status,
+        room.floor || '',
+        room.capacity || '',
+        room.price_per_night
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rooms_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-serif font-bold text-foreground">Room Management</h1>
-        <p className="text-muted-foreground mt-1">
-          Monitor room status, occupancy rates, and performance metrics.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-serif font-bold text-foreground">Room Management</h1>
+          <p className="text-muted-foreground mt-1">
+            Monitor room status and manage availability.
+          </p>
+        </div>
+        <Button onClick={exportToCSV} variant="outline" className="gap-2">
+          <Download className="w-4 h-4" />
+          Export CSV
+        </Button>
       </div>
 
       {/* Stats Overview */}
@@ -241,72 +287,6 @@ const ManagerRooms = () => {
         </Card>
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Room Status Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Room Status Distribution</CardTitle>
-            <CardDescription>Current room availability breakdown</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-[250px] w-full" />
-            ) : (
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Occupancy by Room Type */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Occupancy by Room Type</CardTitle>
-            <CardDescription>Occupancy rate comparison</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-[250px] w-full" />
-            ) : (
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={roomTypeStats}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Bar dataKey="total" name="Total Rooms" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="occupied" name="Occupied" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -342,7 +322,7 @@ const ManagerRooms = () => {
       <Card>
         <CardHeader>
           <CardTitle>Room Overview</CardTitle>
-          <CardDescription>Click on a room to view details</CardDescription>
+          <CardDescription>Click the menu on each room for actions</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -361,27 +341,26 @@ const ManagerRooms = () => {
                       const statusConfig = statusColors[room.status] || statusColors.available;
                       const StatusIcon = statusConfig.icon;
                       return (
-                        <button
+                        <div
                           key={room.id}
-                          onClick={() => {
-                            setSelectedRoom(room);
-                            setDetailsOpen(true);
-                          }}
-                          className={`p-3 rounded-lg border-2 transition-all hover:shadow-md ${
+                          className={`p-3 rounded-lg border-2 transition-all hover:shadow-md relative ${
                             room.status === 'available' ? 'border-green-500/50 bg-green-500/5' :
                             room.status === 'occupied' ? 'border-blue-500/50 bg-blue-500/5' :
                             room.status === 'maintenance' ? 'border-orange-500/50 bg-orange-500/5' :
                             'border-yellow-500/50 bg-yellow-500/5'
                           }`}
                         >
-                          <div className="flex flex-col items-center gap-1">
+                          <div className="absolute top-1 right-1">
+                            <TableActionsMenu actions={getRoomActions(room)} />
+                          </div>
+                          <div className="flex flex-col items-center gap-1 pt-4">
                             <StatusIcon className={`w-5 h-5 ${statusConfig.color}`} />
                             <span className="text-sm font-bold">{room.room_number}</span>
                             <span className="text-xs text-muted-foreground truncate w-full text-center">
                               {room.room_type}
                             </span>
                           </div>
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -395,27 +374,26 @@ const ManagerRooms = () => {
                       const statusConfig = statusColors[room.status] || statusColors.available;
                       const StatusIcon = statusConfig.icon;
                       return (
-                        <button
+                        <div
                           key={room.id}
-                          onClick={() => {
-                            setSelectedRoom(room);
-                            setDetailsOpen(true);
-                          }}
-                          className={`p-3 rounded-lg border-2 transition-all hover:shadow-md ${
+                          className={`p-3 rounded-lg border-2 transition-all hover:shadow-md relative ${
                             room.status === 'available' ? 'border-green-500/50 bg-green-500/5' :
                             room.status === 'occupied' ? 'border-blue-500/50 bg-blue-500/5' :
                             room.status === 'maintenance' ? 'border-orange-500/50 bg-orange-500/5' :
                             'border-yellow-500/50 bg-yellow-500/5'
                           }`}
                         >
-                          <div className="flex flex-col items-center gap-1">
+                          <div className="absolute top-1 right-1">
+                            <TableActionsMenu actions={getRoomActions(room)} />
+                          </div>
+                          <div className="flex flex-col items-center gap-1 pt-4">
                             <StatusIcon className={`w-5 h-5 ${statusConfig.color}`} />
                             <span className="text-sm font-bold">{room.room_number}</span>
                             <span className="text-xs text-muted-foreground truncate w-full text-center">
                               {room.room_type}
                             </span>
                           </div>
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -464,24 +442,27 @@ const ManagerRooms = () => {
                   <p className="font-medium">{selectedRoom.capacity || 2} guests</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Price/Night</p>
+                  <p className="text-sm text-muted-foreground">Price per Night</p>
                   <p className="font-medium text-accent">${selectedRoom.price_per_night}</p>
                 </div>
               </div>
-
               {selectedRoom.description && (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Description</p>
                   <p className="text-sm">{selectedRoom.description}</p>
                 </div>
               )}
-
               {selectedRoom.amenities && (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Amenities</p>
-                  <div className="flex flex-wrap gap-2">
-                    {(Array.isArray(selectedRoom.amenities) ? selectedRoom.amenities : []).map((amenity: string, i: number) => (
-                      <Badge key={i} variant="secondary">{amenity}</Badge>
+                  <div className="flex flex-wrap gap-1">
+                    {(Array.isArray(selectedRoom.amenities) 
+                      ? selectedRoom.amenities 
+                      : Object.keys(selectedRoom.amenities)
+                    ).map((amenity: string, index: number) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {amenity}
+                      </Badge>
                     ))}
                   </div>
                 </div>
