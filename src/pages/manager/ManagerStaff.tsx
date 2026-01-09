@@ -47,6 +47,7 @@ import { toast } from 'sonner';
 import TableActionsMenu, { ActionItem } from '@/components/manager/TableActionsMenu';
 import TablePagination from '@/components/manager/TablePagination';
 import ConfirmDialog from '@/components/manager/ConfirmDialog';
+import SortableTableHead, { SortDirection } from '@/components/manager/SortableTableHead';
 
 interface StaffMember {
   id: string;
@@ -113,12 +114,9 @@ const ManagerStaff = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Column filters
-  const [columnFilters, setColumnFilters] = useState({
-    name: '',
-    email: '',
-    role: ''
-  });
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<string | null>('full_name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   useEffect(() => {
     fetchStaff();
@@ -161,15 +159,13 @@ const ManagerStaff = () => {
 
   const handleAddStaff = async () => {
     try {
-      // Note: In a real app, you'd also create the auth user
-      // For now, we just add to the staff table with a placeholder user_id
       const { error } = await supabase.from('staff').insert({
         full_name: formData.full_name,
         email: formData.email,
         phone_number: formData.phone_number || null,
         role: formData.role,
         department: formData.department || null,
-        user_id: crypto.randomUUID(), // Placeholder - in real app, this would be from auth.users
+        user_id: crypto.randomUUID(),
         is_active: true
       });
 
@@ -315,6 +311,15 @@ const ManagerStaff = () => {
     a.click();
   };
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
   const departments = [...new Set(staff.map(s => s.department).filter(Boolean))];
 
   const filteredStaff = staff.filter(member => {
@@ -332,17 +337,53 @@ const ManagerStaff = () => {
       departmentFilter === 'all' || 
       member.department === departmentFilter;
 
-    const matchesColumnFilters = 
-      member.full_name.toLowerCase().includes(columnFilters.name.toLowerCase()) &&
-      member.email.toLowerCase().includes(columnFilters.email.toLowerCase()) &&
-      member.role.toLowerCase().includes(columnFilters.role.toLowerCase());
+    return matchesSearch && matchesStatus && matchesDepartment;
+  });
 
-    return matchesSearch && matchesStatus && matchesDepartment && matchesColumnFilters;
+  // Apply sorting
+  const sortedStaff = [...filteredStaff].sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    let aVal: any;
+    let bVal: any;
+
+    switch (sortColumn) {
+      case 'full_name':
+        aVal = a.full_name.toLowerCase();
+        bVal = b.full_name.toLowerCase();
+        break;
+      case 'email':
+        aVal = a.email.toLowerCase();
+        bVal = b.email.toLowerCase();
+        break;
+      case 'role':
+        aVal = a.role.toLowerCase();
+        bVal = b.role.toLowerCase();
+        break;
+      case 'department':
+        aVal = (a.department || '').toLowerCase();
+        bVal = (b.department || '').toLowerCase();
+        break;
+      case 'phone_number':
+        aVal = a.phone_number || '';
+        bVal = b.phone_number || '';
+        break;
+      case 'is_active':
+        aVal = a.is_active ? 1 : 0;
+        bVal = b.is_active ? 1 : 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredStaff.length / pageSize);
-  const paginatedStaff = filteredStaff.slice(
+  const totalPages = Math.ceil(sortedStaff.length / pageSize);
+  const paginatedStaff = sortedStaff.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -496,41 +537,49 @@ const ManagerStaff = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Status</TableHead>
+                      <SortableTableHead
+                        column="full_name"
+                        label="Name"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="email"
+                        label="Email"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="role"
+                        label="Role"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="department"
+                        label="Department"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="phone_number"
+                        label="Phone"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="is_active"
+                        label="Status"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
                       <TableHead className="w-[50px]">Actions</TableHead>
-                    </TableRow>
-                    {/* Column Filters */}
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter name..."
-                          value={columnFilters.name}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, name: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter email..."
-                          value={columnFilters.email}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, email: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter role..."
-                          value={columnFilters.role}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, role: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead colSpan={4}></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -577,7 +626,7 @@ const ManagerStaff = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 pageSize={pageSize}
-                totalItems={filteredStaff.length}
+                totalItems={sortedStaff.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={(size) => {
                   setPageSize(size);
@@ -598,19 +647,19 @@ const ManagerStaff = () => {
               Staff Profile
             </DialogTitle>
             <DialogDescription>
-              Staff member details and information
+              Staff member information
             </DialogDescription>
           </DialogHeader>
           {selectedStaff && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
-                  <AvatarFallback className="bg-accent text-accent-foreground text-lg">
+                  <AvatarFallback className="bg-accent text-accent-foreground text-xl">
                     {getInitials(selectedStaff.full_name)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="text-lg font-semibold">{selectedStaff.full_name}</h3>
+                  <h3 className="text-lg font-medium">{selectedStaff.full_name}</h3>
                   <p className="text-muted-foreground">{selectedStaff.email}</p>
                 </div>
               </div>
@@ -621,7 +670,7 @@ const ManagerStaff = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Department</p>
-                  <p className="font-medium">{selectedStaff.department || '-'}</p>
+                  <p className="font-medium">{selectedStaff.department || 'Unassigned'}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Phone</p>
@@ -643,38 +692,35 @@ const ManagerStaff = () => {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Staff Member</DialogTitle>
+            <DialogTitle>Add Staff Member</DialogTitle>
             <DialogDescription>
-              Enter the staff member details below
+              Create a new staff account
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="full_name">Full Name</Label>
+              <Label>Full Name</Label>
               <Input
-                id="full_name"
+                placeholder="Enter full name"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                placeholder="Enter full name"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label>Email</Label>
               <Input
-                id="email"
                 type="email"
+                placeholder="Enter email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="Enter email"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label>Phone Number</Label>
               <Input
-                id="phone"
+                placeholder="Enter phone number"
                 value={formData.phone_number}
                 onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                placeholder="Enter phone number"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -686,7 +732,7 @@ const ManagerStaff = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {ROLES.map(role => (
-                      <SelectItem key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</SelectItem>
+                      <SelectItem key={role} value={role}>{role}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -708,7 +754,9 @@ const ManagerStaff = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddStaff}>Add Staff Member</Button>
+            <Button onClick={handleAddStaff} disabled={!formData.full_name || !formData.email}>
+              Add Staff Member
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -719,31 +767,31 @@ const ManagerStaff = () => {
           <DialogHeader>
             <DialogTitle>Edit Staff Member</DialogTitle>
             <DialogDescription>
-              Update the staff member details below
+              Update staff information
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit_full_name">Full Name</Label>
+              <Label>Full Name</Label>
               <Input
-                id="edit_full_name"
+                placeholder="Enter full name"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_email">Email</Label>
+              <Label>Email</Label>
               <Input
-                id="edit_email"
                 type="email"
+                placeholder="Enter email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_phone">Phone Number</Label>
+              <Label>Phone Number</Label>
               <Input
-                id="edit_phone"
+                placeholder="Enter phone number"
                 value={formData.phone_number}
                 onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
               />
@@ -757,7 +805,7 @@ const ManagerStaff = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {ROLES.map(role => (
-                      <SelectItem key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</SelectItem>
+                      <SelectItem key={role} value={role}>{role}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -790,8 +838,8 @@ const ManagerStaff = () => {
         onOpenChange={setDeleteConfirmOpen}
         title="Delete Staff Member"
         description={`Are you sure you want to delete ${staffToDelete?.full_name}? This action cannot be undone.`}
-        confirmLabel="Delete"
         onConfirm={handleDeleteStaff}
+        confirmLabel="Delete"
         variant="destructive"
       />
     </div>

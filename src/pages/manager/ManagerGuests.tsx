@@ -50,6 +50,7 @@ import { toast } from 'sonner';
 import TableActionsMenu, { ActionItem } from '@/components/manager/TableActionsMenu';
 import TablePagination from '@/components/manager/TablePagination';
 import ConfirmDialog from '@/components/manager/ConfirmDialog';
+import SortableTableHead, { SortDirection } from '@/components/manager/SortableTableHead';
 
 interface Guest {
   id: string;
@@ -108,12 +109,9 @@ const ManagerGuests = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Column filters
-  const [columnFilters, setColumnFilters] = useState({
-    name: '',
-    room: '',
-    phone: ''
-  });
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<string | null>('full_name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   useEffect(() => {
     fetchGuests();
@@ -355,6 +353,15 @@ const ManagerGuests = () => {
     a.click();
   };
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
   // Apply filters
   const filteredGuests = guests.filter(guest => {
     const matchesSearch = 
@@ -367,17 +374,57 @@ const ManagerGuests = () => {
       (statusFilter === 'active' && guest.is_active) ||
       (statusFilter === 'checked-out' && !guest.is_active);
 
-    const matchesColumnFilters = 
-      guest.full_name.toLowerCase().includes(columnFilters.name.toLowerCase()) &&
-      guest.room_number.toLowerCase().includes(columnFilters.room.toLowerCase()) &&
-      (guest.phone_number?.includes(columnFilters.phone) || !columnFilters.phone);
+    return matchesSearch && matchesStatus;
+  });
 
-    return matchesSearch && matchesStatus && matchesColumnFilters;
+  // Apply sorting
+  const sortedGuests = [...filteredGuests].sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    let aVal: any;
+    let bVal: any;
+
+    switch (sortColumn) {
+      case 'full_name':
+        aVal = a.full_name.toLowerCase();
+        bVal = b.full_name.toLowerCase();
+        break;
+      case 'room_number':
+        aVal = a.room_number;
+        bVal = b.room_number;
+        break;
+      case 'phone_number':
+        aVal = a.phone_number || '';
+        bVal = b.phone_number || '';
+        break;
+      case 'check_in_date':
+        aVal = new Date(a.check_in_date).getTime();
+        bVal = new Date(b.check_in_date).getTime();
+        break;
+      case 'check_out_date':
+        aVal = new Date(a.check_out_date).getTime();
+        bVal = new Date(b.check_out_date).getTime();
+        break;
+      case 'stay_duration':
+        aVal = differenceInDays(new Date(a.check_out_date), new Date(a.check_in_date));
+        bVal = differenceInDays(new Date(b.check_out_date), new Date(b.check_in_date));
+        break;
+      case 'is_active':
+        aVal = a.is_active ? 1 : 0;
+        bVal = b.is_active ? 1 : 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredGuests.length / pageSize);
-  const paginatedGuests = filteredGuests.slice(
+  const totalPages = Math.ceil(sortedGuests.length / pageSize);
+  const paginatedGuests = sortedGuests.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -517,42 +564,56 @@ const ManagerGuests = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Guest Name</TableHead>
-                      <TableHead>Room</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Check-in</TableHead>
-                      <TableHead>Check-out</TableHead>
-                      <TableHead>Stay Duration</TableHead>
-                      <TableHead>Status</TableHead>
+                      <SortableTableHead
+                        column="full_name"
+                        label="Guest Name"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="room_number"
+                        label="Room"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="phone_number"
+                        label="Phone"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="check_in_date"
+                        label="Check-in"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="check_out_date"
+                        label="Check-out"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="stay_duration"
+                        label="Stay Duration"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="is_active"
+                        label="Status"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
                       <TableHead className="w-[50px]">Actions</TableHead>
-                    </TableRow>
-                    {/* Column Filters */}
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter name..."
-                          value={columnFilters.name}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, name: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter room..."
-                          value={columnFilters.room}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, room: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter phone..."
-                          value={columnFilters.phone}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, phone: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead colSpan={5}></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -591,7 +652,7 @@ const ManagerGuests = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 pageSize={pageSize}
-                totalItems={filteredGuests.length}
+                totalItems={sortedGuests.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={(size) => {
                   setPageSize(size);
@@ -612,12 +673,13 @@ const ManagerGuests = () => {
               Guest Profile
             </DialogTitle>
             <DialogDescription>
-              Detailed information and activity history
+              Complete guest information and activity history
             </DialogDescription>
           </DialogHeader>
-
+          
           {selectedGuest && (
             <div className="space-y-6">
+              {/* Guest Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Full Name</p>
@@ -625,7 +687,7 @@ const ManagerGuests = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Room Number</p>
-                  <p className="font-medium">{selectedGuest.room_number}</p>
+                  <Badge variant="outline">{selectedGuest.room_number}</Badge>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Phone</p>
@@ -638,61 +700,72 @@ const ManagerGuests = () => {
                   </Badge>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Check-in Date</p>
-                  <p className="font-medium">{format(new Date(selectedGuest.check_in_date), 'PPP')}</p>
+                  <p className="text-sm text-muted-foreground">Check-in</p>
+                  <p className="font-medium">{format(new Date(selectedGuest.check_in_date), 'MMMM dd, yyyy')}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Check-out Date</p>
-                  <p className="font-medium">{format(new Date(selectedGuest.check_out_date), 'PPP')}</p>
+                  <p className="text-sm text-muted-foreground">Check-out</p>
+                  <p className="font-medium">{format(new Date(selectedGuest.check_out_date), 'MMMM dd, yyyy')}</p>
                 </div>
               </div>
 
+              {/* Total Spending */}
+              <Card className="bg-accent/10">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <ShoppingCart className="w-5 h-5 text-accent" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Spending</p>
+                      <p className="text-2xl font-bold text-accent">${selectedGuest.totalSpending.toFixed(2)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Activity Summary */}
               <div className="grid grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <ShoppingCart className="w-6 h-6 mx-auto text-accent mb-2" />
-                    <p className="text-2xl font-bold">${selectedGuest.totalSpending.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">Total Spending</p>
+                    <ShoppingCart className="w-6 h-6 mx-auto text-blue-500 mb-2" />
+                    <p className="text-2xl font-bold">{selectedGuest.orders.length}</p>
+                    <p className="text-sm text-muted-foreground">Orders</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <Wrench className="w-6 h-6 mx-auto text-blue-500 mb-2" />
+                    <Wrench className="w-6 h-6 mx-auto text-green-500 mb-2" />
                     <p className="text-2xl font-bold">{selectedGuest.serviceRequests.length}</p>
-                    <p className="text-xs text-muted-foreground">Service Requests</p>
+                    <p className="text-sm text-muted-foreground">Service Requests</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <MessageSquareWarning className="w-6 h-6 mx-auto text-destructive mb-2" />
+                    <MessageSquareWarning className="w-6 h-6 mx-auto text-orange-500 mb-2" />
                     <p className="text-2xl font-bold">{selectedGuest.reclamations.length}</p>
-                    <p className="text-xs text-muted-foreground">Complaints</p>
+                    <p className="text-sm text-muted-foreground">Complaints</p>
                   </CardContent>
                 </Card>
               </div>
 
-              <div>
-                <h4 className="font-medium mb-3">Order History ({selectedGuest.orders.length})</h4>
-                {selectedGuest.orders.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No orders placed</p>
-                ) : (
+              {/* Recent Orders */}
+              {selectedGuest.orders.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Recent Orders</h4>
                   <div className="space-y-2">
-                    {selectedGuest.orders.slice(0, 5).map((order) => (
-                      <div key={order.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    {selectedGuest.orders.slice(0, 3).map((order) => (
+                      <div key={order.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <div>
-                          <p className="text-sm font-medium">${order.total_price?.toFixed(2)}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(new Date(order.created_at), 'PPp')}
+                          <p className="font-medium">${order.total_price?.toFixed(2)}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(new Date(order.created_at), 'MMM dd, HH:mm')}
                           </p>
                         </div>
-                        <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
-                          {order.status}
-                        </Badge>
+                        <Badge>{order.status}</Badge>
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
@@ -704,24 +777,23 @@ const ManagerGuests = () => {
           <DialogHeader>
             <DialogTitle>Add New Guest</DialogTitle>
             <DialogDescription>
-              Enter the guest details below
+              Enter guest details to create a new check-in
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="full_name">Full Name</Label>
+              <Label>Full Name</Label>
               <Input
-                id="full_name"
+                placeholder="Enter full name"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                placeholder="Enter guest name"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="room">Room</Label>
+              <Label>Room</Label>
               <Select value={formData.room_id} onValueChange={(value) => setFormData({ ...formData, room_id: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a room" />
+                  <SelectValue placeholder="Select room" />
                 </SelectTrigger>
                 <SelectContent>
                   {availableRooms.map(room => (
@@ -733,28 +805,25 @@ const ManagerGuests = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label>Phone Number</Label>
               <Input
-                id="phone"
+                placeholder="Enter phone number"
                 value={formData.phone_number}
                 onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                placeholder="Enter phone number"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="check_in">Check-in Date</Label>
+                <Label>Check-in Date</Label>
                 <Input
-                  id="check_in"
                   type="date"
                   value={formData.check_in_date}
                   onChange={(e) => setFormData({ ...formData, check_in_date: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="check_out">Check-out Date</Label>
+                <Label>Check-out Date</Label>
                 <Input
-                  id="check_out"
                   type="date"
                   value={formData.check_out_date}
                   onChange={(e) => setFormData({ ...formData, check_out_date: e.target.value })}
@@ -764,7 +833,9 @@ const ManagerGuests = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddGuest}>Add Guest</Button>
+            <Button onClick={handleAddGuest} disabled={!formData.full_name || !formData.room_id || !formData.check_in_date || !formData.check_out_date}>
+              Add Guest
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -775,23 +846,23 @@ const ManagerGuests = () => {
           <DialogHeader>
             <DialogTitle>Edit Guest</DialogTitle>
             <DialogDescription>
-              Update the guest details below
+              Update guest information
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit_full_name">Full Name</Label>
+              <Label>Full Name</Label>
               <Input
-                id="edit_full_name"
+                placeholder="Enter full name"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_room">Room</Label>
+              <Label>Room</Label>
               <Select value={formData.room_id} onValueChange={(value) => setFormData({ ...formData, room_id: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a room" />
+                  <SelectValue placeholder="Select room" />
                 </SelectTrigger>
                 <SelectContent>
                   {rooms.map(room => (
@@ -803,27 +874,25 @@ const ManagerGuests = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_phone">Phone Number</Label>
+              <Label>Phone Number</Label>
               <Input
-                id="edit_phone"
+                placeholder="Enter phone number"
                 value={formData.phone_number}
                 onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit_check_in">Check-in Date</Label>
+                <Label>Check-in Date</Label>
                 <Input
-                  id="edit_check_in"
                   type="date"
                   value={formData.check_in_date}
                   onChange={(e) => setFormData({ ...formData, check_in_date: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit_check_out">Check-out Date</Label>
+                <Label>Check-out Date</Label>
                 <Input
-                  id="edit_check_out"
                   type="date"
                   value={formData.check_out_date}
                   onChange={(e) => setFormData({ ...formData, check_out_date: e.target.value })}
@@ -844,8 +913,8 @@ const ManagerGuests = () => {
         onOpenChange={setDeleteConfirmOpen}
         title="Delete Guest"
         description={`Are you sure you want to delete ${guestToDelete?.full_name}? This action cannot be undone.`}
-        confirmLabel="Delete"
         onConfirm={handleDeleteGuest}
+        confirmLabel="Delete"
         variant="destructive"
       />
     </div>

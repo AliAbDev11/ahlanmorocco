@@ -42,6 +42,7 @@ import { format, parseISO, differenceInMinutes } from 'date-fns';
 import { toast } from 'sonner';
 import TableActionsMenu, { ActionItem } from '@/components/manager/TableActionsMenu';
 import TablePagination from '@/components/manager/TablePagination';
+import SortableTableHead, { SortDirection } from '@/components/manager/SortableTableHead';
 
 interface ServiceRequest {
   id: string;
@@ -83,11 +84,9 @@ const ManagerServiceRequests = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Column filters
-  const [columnFilters, setColumnFilters] = useState({
-    room: '',
-    type: ''
-  });
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<string | null>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     fetchRequests();
@@ -186,6 +185,15 @@ const ManagerServiceRequests = () => {
     return actions;
   };
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
   const serviceTypes = [...new Set(requests.map(r => r.service_type))];
 
   const filteredRequests = requests.filter(request => {
@@ -197,16 +205,53 @@ const ManagerServiceRequests = () => {
     const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
     const matchesType = typeFilter === 'all' || request.service_type === typeFilter;
 
-    const matchesColumnFilters = 
-      request.room_number.toLowerCase().includes(columnFilters.room.toLowerCase()) &&
-      request.service_type.toLowerCase().includes(columnFilters.type.toLowerCase());
+    return matchesSearch && matchesStatus && matchesType;
+  });
 
-    return matchesSearch && matchesStatus && matchesType && matchesColumnFilters;
+  // Apply sorting
+  const sortedRequests = [...filteredRequests].sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    let aVal: any;
+    let bVal: any;
+
+    switch (sortColumn) {
+      case 'room_number':
+        aVal = a.room_number;
+        bVal = b.room_number;
+        break;
+      case 'service_type':
+        aVal = a.service_type.toLowerCase();
+        bVal = b.service_type.toLowerCase();
+        break;
+      case 'description':
+        aVal = (a.description || '').toLowerCase();
+        bVal = (b.description || '').toLowerCase();
+        break;
+      case 'status':
+        aVal = a.status;
+        bVal = b.status;
+        break;
+      case 'created_at':
+        aVal = new Date(a.created_at).getTime();
+        bVal = new Date(b.created_at).getTime();
+        break;
+      case 'completed_at':
+        aVal = a.completed_at ? new Date(a.completed_at).getTime() : 0;
+        bVal = b.completed_at ? new Date(b.completed_at).getTime() : 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredRequests.length / pageSize);
-  const paginatedRequests = filteredRequests.slice(
+  const totalPages = Math.ceil(sortedRequests.length / pageSize);
+  const paginatedRequests = sortedRequests.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -389,33 +434,49 @@ const ManagerServiceRequests = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Room</TableHead>
-                      <TableHead>Service Type</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Requested</TableHead>
-                      <TableHead>Completed</TableHead>
+                      <SortableTableHead
+                        column="room_number"
+                        label="Room"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="service_type"
+                        label="Service Type"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="description"
+                        label="Description"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="status"
+                        label="Status"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="created_at"
+                        label="Requested"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="completed_at"
+                        label="Completed"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
                       <TableHead className="w-[50px]">Actions</TableHead>
-                    </TableRow>
-                    {/* Column Filters */}
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter room..."
-                          value={columnFilters.room}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, room: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter type..."
-                          value={columnFilters.type}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, type: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead colSpan={5}></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -456,7 +517,7 @@ const ManagerServiceRequests = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 pageSize={pageSize}
-                totalItems={filteredRequests.length}
+                totalItems={sortedRequests.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={(size) => {
                   setPageSize(size);
@@ -497,7 +558,7 @@ const ManagerServiceRequests = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Created</p>
-                  <p className="font-medium">{format(parseISO(selectedRequest.created_at), 'PPp')}</p>
+                  <p className="font-medium">{format(parseISO(selectedRequest.created_at), 'MMM dd, HH:mm')}</p>
                 </div>
               </div>
               {selectedRequest.description && (
@@ -506,10 +567,16 @@ const ManagerServiceRequests = () => {
                   <p className="font-medium">{selectedRequest.description}</p>
                 </div>
               )}
+              {selectedRequest.requested_time && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Requested Time</p>
+                  <p className="font-medium">{selectedRequest.requested_time}</p>
+                </div>
+              )}
               {selectedRequest.completed_at && (
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="font-medium">{format(parseISO(selectedRequest.completed_at), 'PPp')}</p>
+                  <p className="text-sm text-muted-foreground">Completed At</p>
+                  <p className="font-medium">{format(parseISO(selectedRequest.completed_at), 'MMM dd, HH:mm')}</p>
                 </div>
               )}
             </div>
