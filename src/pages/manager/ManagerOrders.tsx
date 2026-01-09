@@ -44,6 +44,7 @@ import { toast } from 'sonner';
 import TableActionsMenu, { ActionItem } from '@/components/manager/TableActionsMenu';
 import TablePagination from '@/components/manager/TablePagination';
 import ConfirmDialog from '@/components/manager/ConfirmDialog';
+import SortableTableHead, { SortDirection } from '@/components/manager/SortableTableHead';
 
 interface Order {
   id: string;
@@ -86,11 +87,9 @@ const ManagerOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Column filters
-  const [columnFilters, setColumnFilters] = useState({
-    room: '',
-    orderId: ''
-  });
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<string | null>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     fetchOrders();
@@ -216,6 +215,15 @@ const ManagerOrders = () => {
     return actions;
   };
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.room_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -223,16 +231,53 @@ const ManagerOrders = () => {
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
 
-    const matchesColumnFilters = 
-      order.room_number.toLowerCase().includes(columnFilters.room.toLowerCase()) &&
-      order.id.toLowerCase().includes(columnFilters.orderId.toLowerCase());
+    return matchesSearch && matchesStatus;
+  });
 
-    return matchesSearch && matchesStatus && matchesColumnFilters;
+  // Apply sorting
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    let aVal: any;
+    let bVal: any;
+
+    switch (sortColumn) {
+      case 'id':
+        aVal = a.id;
+        bVal = b.id;
+        break;
+      case 'room_number':
+        aVal = a.room_number;
+        bVal = b.room_number;
+        break;
+      case 'total_price':
+        aVal = a.total_price;
+        bVal = b.total_price;
+        break;
+      case 'status':
+        aVal = a.status;
+        bVal = b.status;
+        break;
+      case 'created_at':
+        aVal = new Date(a.created_at).getTime();
+        bVal = new Date(b.created_at).getTime();
+        break;
+      case 'delivery_time':
+        aVal = a.delivery_time || '';
+        bVal = b.delivery_time || '';
+        break;
+      default:
+        return 0;
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredOrders.length / pageSize);
-  const paginatedOrders = filteredOrders.slice(
+  const totalPages = Math.ceil(sortedOrders.length / pageSize);
+  const paginatedOrders = sortedOrders.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -407,33 +452,49 @@ const ManagerOrders = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Room</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Delivery Time</TableHead>
+                      <SortableTableHead
+                        column="id"
+                        label="Order ID"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="room_number"
+                        label="Room"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="total_price"
+                        label="Total"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="status"
+                        label="Status"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="created_at"
+                        label="Date"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="delivery_time"
+                        label="Delivery Time"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
                       <TableHead className="w-[50px]">Actions</TableHead>
-                    </TableRow>
-                    {/* Column Filters */}
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter ID..."
-                          value={columnFilters.orderId}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, orderId: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter room..."
-                          value={columnFilters.room}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, room: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead colSpan={5}></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -467,7 +528,7 @@ const ManagerOrders = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 pageSize={pageSize}
-                totalItems={filteredOrders.length}
+                totalItems={sortedOrders.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={(size) => {
                   setPageSize(size);
@@ -507,37 +568,45 @@ const ManagerOrders = () => {
                   <p className="font-medium text-accent">${selectedOrder.total_price?.toFixed(2)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Date</p>
-                  <p className="font-medium">{format(parseISO(selectedOrder.created_at), 'PPp')}</p>
+                  <p className="text-sm text-muted-foreground">Created</p>
+                  <p className="font-medium">{format(parseISO(selectedOrder.created_at), 'MMM dd, HH:mm')}</p>
                 </div>
               </div>
+              {selectedOrder.delivery_time && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Requested Delivery Time</p>
+                  <p className="font-medium">{selectedOrder.delivery_time}</p>
+                </div>
+              )}
               {selectedOrder.special_requests && (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Special Requests</p>
                   <p className="font-medium">{selectedOrder.special_requests}</p>
                 </div>
               )}
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Items</p>
-                <div className="bg-muted p-3 rounded-lg">
-                  <pre className="text-xs overflow-auto">
-                    {JSON.stringify(selectedOrder.items, null, 2)}
-                  </pre>
+              {selectedOrder.items && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Items</p>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <pre className="text-sm whitespace-pre-wrap">
+                      {JSON.stringify(selectedOrder.items, null, 2)}
+                    </pre>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Cancel Confirmation Dialog */}
+      {/* Cancel Order Confirmation */}
       <ConfirmDialog
         open={cancelConfirmOpen}
         onOpenChange={setCancelConfirmOpen}
         title="Cancel Order"
-        description={`Are you sure you want to cancel this order for room ${orderToCancel?.room_number}?`}
-        confirmLabel="Cancel Order"
+        description="Are you sure you want to cancel this order? This action cannot be undone."
         onConfirm={handleCancelOrder}
+        confirmLabel="Cancel Order"
         variant="destructive"
       />
     </div>

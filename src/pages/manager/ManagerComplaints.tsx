@@ -42,6 +42,7 @@ import { format, parseISO, differenceInHours } from 'date-fns';
 import { toast } from 'sonner';
 import TableActionsMenu, { ActionItem } from '@/components/manager/TableActionsMenu';
 import TablePagination from '@/components/manager/TablePagination';
+import SortableTableHead, { SortDirection } from '@/components/manager/SortableTableHead';
 
 interface Complaint {
   id: string;
@@ -71,6 +72,13 @@ const URGENCY_COLORS: Record<string, string> = {
   low: '#22c55e'
 };
 
+const URGENCY_ORDER: Record<string, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3
+};
+
 const ManagerComplaints = () => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,11 +100,9 @@ const ManagerComplaints = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Column filters
-  const [columnFilters, setColumnFilters] = useState({
-    room: '',
-    category: ''
-  });
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<string | null>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     fetchComplaints();
@@ -197,6 +203,15 @@ const ManagerComplaints = () => {
     return actions;
   };
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
   const filteredComplaints = complaints.filter(complaint => {
     const matchesSearch = 
       complaint.room_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -206,16 +221,53 @@ const ManagerComplaints = () => {
     const matchesStatus = statusFilter === 'all' || complaint.status === statusFilter;
     const matchesUrgency = urgencyFilter === 'all' || complaint.urgency === urgencyFilter;
 
-    const matchesColumnFilters = 
-      complaint.room_number.toLowerCase().includes(columnFilters.room.toLowerCase()) &&
-      complaint.category.toLowerCase().includes(columnFilters.category.toLowerCase());
+    return matchesSearch && matchesStatus && matchesUrgency;
+  });
 
-    return matchesSearch && matchesStatus && matchesUrgency && matchesColumnFilters;
+  // Apply sorting
+  const sortedComplaints = [...filteredComplaints].sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    let aVal: any;
+    let bVal: any;
+
+    switch (sortColumn) {
+      case 'room_number':
+        aVal = a.room_number;
+        bVal = b.room_number;
+        break;
+      case 'category':
+        aVal = a.category.toLowerCase();
+        bVal = b.category.toLowerCase();
+        break;
+      case 'description':
+        aVal = a.description.toLowerCase();
+        bVal = b.description.toLowerCase();
+        break;
+      case 'urgency':
+        aVal = URGENCY_ORDER[a.urgency] ?? 4;
+        bVal = URGENCY_ORDER[b.urgency] ?? 4;
+        break;
+      case 'status':
+        aVal = a.status;
+        bVal = b.status;
+        break;
+      case 'created_at':
+        aVal = new Date(a.created_at).getTime();
+        bVal = new Date(b.created_at).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredComplaints.length / pageSize);
-  const paginatedComplaints = filteredComplaints.slice(
+  const totalPages = Math.ceil(sortedComplaints.length / pageSize);
+  const paginatedComplaints = sortedComplaints.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -422,33 +474,49 @@ const ManagerComplaints = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Room</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Urgency</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
+                      <SortableTableHead
+                        column="room_number"
+                        label="Room"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="category"
+                        label="Category"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="description"
+                        label="Description"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="urgency"
+                        label="Urgency"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="status"
+                        label="Status"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
+                      <SortableTableHead
+                        column="created_at"
+                        label="Created"
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      />
                       <TableHead className="w-[50px]">Actions</TableHead>
-                    </TableRow>
-                    {/* Column Filters */}
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter room..."
-                          value={columnFilters.room}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, room: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead className="py-2">
-                        <Input
-                          placeholder="Filter category..."
-                          value={columnFilters.category}
-                          onChange={(e) => setColumnFilters({ ...columnFilters, category: e.target.value })}
-                          className="h-8 text-xs"
-                        />
-                      </TableHead>
-                      <TableHead colSpan={5}></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -484,7 +552,7 @@ const ManagerComplaints = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 pageSize={pageSize}
-                totalItems={filteredComplaints.length}
+                totalItems={sortedComplaints.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={(size) => {
                   setPageSize(size);
@@ -529,12 +597,12 @@ const ManagerComplaints = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Created</p>
-                  <p className="font-medium">{format(parseISO(selectedComplaint.created_at), 'PPp')}</p>
+                  <p className="font-medium">{format(parseISO(selectedComplaint.created_at), 'MMM dd, HH:mm')}</p>
                 </div>
                 {selectedComplaint.resolved_at && (
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Resolved</p>
-                    <p className="font-medium">{format(parseISO(selectedComplaint.resolved_at), 'PPp')}</p>
+                    <p className="font-medium">{format(parseISO(selectedComplaint.resolved_at), 'MMM dd, HH:mm')}</p>
                   </div>
                 )}
               </div>
