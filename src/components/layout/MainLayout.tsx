@@ -3,6 +3,7 @@ import Sidebar from "./Sidebar";
 import MobileNav from "./MobileNav";
 import { useSidebarContext } from "@/contexts/SidebarContext";
 import { cn } from "@/lib/utils";
+import { FullscreenButton } from "@/components/ui/fullscreen-button";
 
 const MainLayout = () => {
   const { isCollapsed } = useSidebarContext();
@@ -16,6 +17,11 @@ const MainLayout = () => {
 
       {/* Mobile Navigation */}
       <MobileNav />
+
+      {/* Fullscreen Button - Fixed top right */}
+      <div className="fixed top-4 right-4 z-50 hidden lg:block">
+        <FullscreenButton variant="outline" showLabel={true} className="bg-card shadow-md" />
+      </div>
 
       {/* Main Content - With left margin for fixed sidebar */}
       <main 

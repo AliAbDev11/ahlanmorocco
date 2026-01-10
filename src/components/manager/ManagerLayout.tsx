@@ -16,6 +16,7 @@ import {
   Menu,
   BarChart3
 } from 'lucide-react';
+import { FullscreenButton } from '@/components/ui/fullscreen-button';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
@@ -168,6 +169,8 @@ const ManagerLayout = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <FullscreenButton variant="outline" showLabel={true} />
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
