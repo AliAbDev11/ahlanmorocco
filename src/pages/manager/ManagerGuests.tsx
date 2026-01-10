@@ -43,14 +43,18 @@ import {
   Trash2,
   LogOut,
   Plus,
-  Download
+  Download,
+  AlertCircle,
+  CalendarDays
 } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, addDays, startOfDay } from 'date-fns';
 import { toast } from 'sonner';
 import TableActionsMenu, { ActionItem } from '@/components/manager/TableActionsMenu';
 import TablePagination from '@/components/manager/TablePagination';
 import ConfirmDialog from '@/components/manager/ConfirmDialog';
 import SortableTableHead, { SortDirection } from '@/components/manager/SortableTableHead';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Guest {
   id: string;
@@ -94,10 +98,11 @@ const ManagerGuests = () => {
   const [formData, setFormData] = useState({
     full_name: '',
     room_id: '',
-    phone_number: '',
-    check_in_date: '',
-    check_out_date: ''
+    phone_number: ''
   });
+  const [checkInDate, setCheckInDate] = useState<Date | undefined>(undefined);
+  const [checkOutDate, setCheckOutDate] = useState<Date | undefined>(undefined);
+  const [dateError, setDateError] = useState<string>('');
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -189,7 +194,58 @@ const ManagerGuests = () => {
     }
   };
 
+  const handleCheckInDateChange = (date: Date | undefined) => {
+    setCheckInDate(date);
+    setDateError('');
+    
+    // If check-out is already selected and is before or equal to new check-in
+    if (checkOutDate && date && date >= checkOutDate) {
+      setCheckOutDate(undefined);
+      setDateError('Check-out date was reset because it must be after check-in date');
+    }
+  };
+
+  const handleCheckOutDateChange = (date: Date | undefined) => {
+    if (!checkInDate) {
+      setDateError('Please select check-in date first');
+      return;
+    }
+    
+    if (date && checkInDate && date <= checkInDate) {
+      setDateError('Check-out date must be after check-in date');
+      return;
+    }
+    
+    setCheckOutDate(date);
+    setDateError('');
+  };
+
+  const calculateNights = (checkIn: Date, checkOut: Date) => {
+    return differenceInDays(checkOut, checkIn);
+  };
+
+  const resetForm = () => {
+    setFormData({ full_name: '', room_id: '', phone_number: '' });
+    setCheckInDate(undefined);
+    setCheckOutDate(undefined);
+    setDateError('');
+  };
+
+  const isFormValid = () => {
+    return formData.full_name && formData.room_id && checkInDate && checkOutDate && !dateError;
+  };
+
   const handleAddGuest = async () => {
+    if (!checkInDate || !checkOutDate) {
+      setDateError('Both check-in and check-out dates are required');
+      return;
+    }
+
+    if (checkOutDate <= checkInDate) {
+      setDateError('Check-out date must be after check-in date');
+      return;
+    }
+
     try {
       const selectedRoom = rooms.find(r => r.id === formData.room_id);
       
@@ -198,8 +254,8 @@ const ManagerGuests = () => {
         room_id: formData.room_id,
         room_number: selectedRoom?.room_number || '',
         phone_number: formData.phone_number || null,
-        check_in_date: formData.check_in_date,
-        check_out_date: formData.check_out_date,
+        check_in_date: format(checkInDate, 'yyyy-MM-dd'),
+        check_out_date: format(checkOutDate, 'yyyy-MM-dd'),
         is_active: true
       });
 
@@ -207,7 +263,7 @@ const ManagerGuests = () => {
 
       toast.success('Guest added successfully');
       setAddOpen(false);
-      setFormData({ full_name: '', room_id: '', phone_number: '', check_in_date: '', check_out_date: '' });
+      resetForm();
       fetchGuests();
     } catch (error) {
       console.error('Error adding guest:', error);
@@ -217,6 +273,16 @@ const ManagerGuests = () => {
 
   const handleEditGuest = async () => {
     if (!editingGuest) return;
+    
+    if (!checkInDate || !checkOutDate) {
+      setDateError('Both check-in and check-out dates are required');
+      return;
+    }
+
+    if (checkOutDate <= checkInDate) {
+      setDateError('Check-out date must be after check-in date');
+      return;
+    }
     
     try {
       const selectedRoom = rooms.find(r => r.id === formData.room_id);
@@ -228,8 +294,8 @@ const ManagerGuests = () => {
           room_id: formData.room_id,
           room_number: selectedRoom?.room_number || editingGuest.room_number,
           phone_number: formData.phone_number || null,
-          check_in_date: formData.check_in_date,
-          check_out_date: formData.check_out_date
+          check_in_date: format(checkInDate, 'yyyy-MM-dd'),
+          check_out_date: format(checkOutDate, 'yyyy-MM-dd')
         })
         .eq('id', editingGuest.id);
 
@@ -238,6 +304,7 @@ const ManagerGuests = () => {
       toast.success('Guest updated successfully');
       setEditOpen(false);
       setEditingGuest(null);
+      resetForm();
       fetchGuests();
     } catch (error) {
       console.error('Error updating guest:', error);
@@ -288,10 +355,11 @@ const ManagerGuests = () => {
     setFormData({
       full_name: guest.full_name,
       room_id: guest.room_id || '',
-      phone_number: guest.phone_number || '',
-      check_in_date: guest.check_in_date.split('T')[0],
-      check_out_date: guest.check_out_date.split('T')[0]
+      phone_number: guest.phone_number || ''
     });
+    setCheckInDate(new Date(guest.check_in_date));
+    setCheckOutDate(new Date(guest.check_out_date));
+    setDateError('');
     setEditOpen(true);
   };
 
@@ -451,7 +519,7 @@ const ManagerGuests = () => {
             Export CSV
           </Button>
           <Button onClick={() => {
-            setFormData({ full_name: '', room_id: '', phone_number: '', check_in_date: '', check_out_date: '' });
+            resetForm();
             setAddOpen(true);
           }} className="gap-2">
             <Plus className="w-4 h-4" />
@@ -814,26 +882,55 @@ const ManagerGuests = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Check-in Date</Label>
-                <Input
-                  type="date"
-                  value={formData.check_in_date}
-                  onChange={(e) => setFormData({ ...formData, check_in_date: e.target.value })}
+                <Label className="flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                  Check-in Date
+                </Label>
+                <DatePicker
+                  date={checkInDate}
+                  onDateChange={handleCheckInDateChange}
+                  placeholder="Select check-in date"
+                  minDate={startOfDay(new Date())}
+                  showClearButton
                 />
               </div>
               <div className="space-y-2">
-                <Label>Check-out Date</Label>
-                <Input
-                  type="date"
-                  value={formData.check_out_date}
-                  onChange={(e) => setFormData({ ...formData, check_out_date: e.target.value })}
+                <Label className="flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                  Check-out Date
+                </Label>
+                <DatePicker
+                  date={checkOutDate}
+                  onDateChange={handleCheckOutDateChange}
+                  placeholder="Select check-out date"
+                  minDate={checkInDate ? addDays(checkInDate, 1) : undefined}
+                  disabled={!checkInDate}
+                  showClearButton
                 />
               </div>
             </div>
+            
+            {/* Stay Duration Display */}
+            {checkInDate && checkOutDate && (
+              <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg">
+                <p className="text-sm text-primary flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4" />
+                  Stay Duration: <span className="font-semibold">{calculateNights(checkInDate, checkOutDate)} night{calculateNights(checkInDate, checkOutDate) !== 1 ? 's' : ''}</span>
+                </p>
+              </div>
+            )}
+            
+            {/* Date Error Display */}
+            {dateError && (
+              <Alert variant="destructive" className="py-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{dateError}</AlertDescription>
+              </Alert>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddGuest} disabled={!formData.full_name || !formData.room_id || !formData.check_in_date || !formData.check_out_date}>
+            <Button onClick={handleAddGuest} disabled={!isFormValid()}>
               Add Guest
             </Button>
           </DialogFooter>
@@ -883,26 +980,54 @@ const ManagerGuests = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Check-in Date</Label>
-                <Input
-                  type="date"
-                  value={formData.check_in_date}
-                  onChange={(e) => setFormData({ ...formData, check_in_date: e.target.value })}
+                <Label className="flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                  Check-in Date
+                </Label>
+                <DatePicker
+                  date={checkInDate}
+                  onDateChange={handleCheckInDateChange}
+                  placeholder="Select check-in date"
+                  showClearButton
                 />
               </div>
               <div className="space-y-2">
-                <Label>Check-out Date</Label>
-                <Input
-                  type="date"
-                  value={formData.check_out_date}
-                  onChange={(e) => setFormData({ ...formData, check_out_date: e.target.value })}
+                <Label className="flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                  Check-out Date
+                </Label>
+                <DatePicker
+                  date={checkOutDate}
+                  onDateChange={handleCheckOutDateChange}
+                  placeholder="Select check-out date"
+                  minDate={checkInDate ? addDays(checkInDate, 1) : undefined}
+                  disabled={!checkInDate}
+                  showClearButton
                 />
               </div>
             </div>
+            
+            {/* Stay Duration Display */}
+            {checkInDate && checkOutDate && (
+              <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg">
+                <p className="text-sm text-primary flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4" />
+                  Stay Duration: <span className="font-semibold">{calculateNights(checkInDate, checkOutDate)} night{calculateNights(checkInDate, checkOutDate) !== 1 ? 's' : ''}</span>
+                </p>
+              </div>
+            )}
+            
+            {/* Date Error Display */}
+            {dateError && (
+              <Alert variant="destructive" className="py-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{dateError}</AlertDescription>
+              </Alert>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button onClick={handleEditGuest}>Save Changes</Button>
+            <Button onClick={handleEditGuest} disabled={!isFormValid()}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
