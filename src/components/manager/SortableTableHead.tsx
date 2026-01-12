@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { TableHead } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
@@ -129,4 +130,4 @@ export const sortByUrgency = (urgency: string): number => {
   return order[urgency] ?? 4;
 };
 
-import { useState } from 'react';
+export { SortableTableHead };
