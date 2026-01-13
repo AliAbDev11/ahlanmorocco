@@ -13,12 +13,11 @@ import {
   LogOut,
   Menu,
   X,
-  Bell,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
 import ahlanLogo from "@/assets/ahlan-logo.png";
-import { FullscreenButton } from "@/components/ui/fullscreen-button";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/staff" },
@@ -32,7 +31,7 @@ const navItems = [
 const StaffLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { staffInfo, signOut } = useStaffAuth();
+  const { staffInfo, signOut, user } = useStaffAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -57,23 +56,14 @@ const StaffLayout = () => {
               <span className="font-serif text-xl font-semibold">Staff Portal</span>
             )}
           </div>
-          <div className="flex items-center gap-1">
-            {sidebarOpen && (
-              <FullscreenButton 
-                variant="ghost" 
-                showLabel={false} 
-                className="text-primary-foreground hover:bg-primary-foreground/10" 
-              />
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-primary-foreground hover:bg-primary-foreground/10"
-            >
-              {sidebarOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-primary-foreground hover:bg-primary-foreground/10"
+          >
+            {sidebarOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+          </Button>
         </div>
 
         {/* Navigation */}
@@ -134,18 +124,12 @@ const StaffLayout = () => {
           <span className="font-serif text-lg font-semibold">Staff Portal</span>
         </div>
         <div className="flex items-center gap-2">
-          <FullscreenButton 
-            variant="ghost" 
-            showLabel={false} 
-            className="text-primary-foreground hover:bg-primary-foreground/10" 
-          />
-          <Button
+          <NotificationBell 
+            userId={user?.id}
+            userType="staff"
             variant="ghost"
-            size="icon"
-            className="text-primary-foreground"
-          >
-            <Bell className="h-5 w-5" />
-          </Button>
+            className="text-primary-foreground hover:bg-primary-foreground/10"
+          />
           <Button
             variant="ghost"
             size="icon"
