@@ -251,6 +251,57 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_read: boolean
+          message: string
+          priority: string
+          read_at: string | null
+          related_entity_id: string | null
+          related_entity_type: string | null
+          title: string
+          type: string
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message: string
+          priority?: string
+          read_at?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          title: string
+          type: string
+          user_id: string
+          user_type: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          priority?: string
+          read_at?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           assigned_to: string | null
@@ -514,6 +565,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_notification: {
+        Args: {
+          p_action_url?: string
+          p_message: string
+          p_priority?: string
+          p_related_entity_id?: string
+          p_related_entity_type?: string
+          p_title: string
+          p_type: string
+          p_user_id: string
+          p_user_type: string
+        }
+        Returns: string
+      }
       get_staff_by_email: {
         Args: { staff_email: string }
         Returns: {
@@ -536,6 +601,14 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      mark_all_notifications_read: {
+        Args: { p_user_id: string; p_user_type: string }
+        Returns: number
+      }
+      mark_notification_read: {
+        Args: { p_notification_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "staff" | "manager"

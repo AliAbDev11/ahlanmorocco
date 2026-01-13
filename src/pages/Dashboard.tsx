@@ -19,13 +19,14 @@ import {
   Compass,
   Clock,
   ChevronRight,
-  Bell,
   Globe,
   Check,
 } from "lucide-react";
 import ahlanLogo from "@/assets/ahlan-logo.png";
 import { useGuestProfile } from "@/hooks/useGuestProfile";
 import { useAuth } from "@/hooks/useAuth";
+import { FullscreenButton } from "@/components/ui/fullscreen-button";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const languages = [
   { code: "en", label: "English", flag: "🇬🇧" },
@@ -136,14 +137,13 @@ const Dashboard = () => {
         />
         
         <div className="relative z-10">
-          {/* Top row: Language selector and actions */}
+          {/* Top row: Language selector, Fullscreen, and Notifications */}
           <div className="flex items-center justify-end gap-2 mb-4">
             {/* Language Selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-white/10 gap-2">
-                  <Globe className="w-4 h-4" />
-                  <span className="text-sm">{languages.find(l => l.code === currentLanguage)?.flag}</span>
+                <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-white/10 h-9 w-9">
+                  <Globe className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[140px]">
@@ -163,13 +163,20 @@ const Dashboard = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Fullscreen Button - matching style */}
+            <FullscreenButton 
+              variant="ghost" 
+              showLabel={false} 
+              className="text-primary-foreground hover:bg-white/10 h-9 w-9" 
+            />
+
             {/* Notification Bell */}
-            <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-white/10">
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent rounded-full text-xs flex items-center justify-center text-accent-foreground font-medium">
-                2
-              </span>
-            </Button>
+            <NotificationBell 
+              userId={user?.id || guestSession?.guestId}
+              userType="guest"
+              variant="ghost"
+              className="text-primary-foreground hover:bg-white/10 h-9 w-9"
+            />
           </div>
 
           {/* Main header content */}

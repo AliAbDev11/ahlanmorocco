@@ -11,12 +11,12 @@ import {
   FileText,
   Settings,
   LogOut,
-  Bell,
   ChevronLeft,
   Menu,
   BarChart3
 } from 'lucide-react';
 import { FullscreenButton } from '@/components/ui/fullscreen-button';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
@@ -27,7 +27,6 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import ahlanLogo from '@/assets/ahlan-logo.png';
@@ -45,7 +44,7 @@ const navItems = [
 ];
 
 const ManagerLayout = () => {
-  const { managerInfo, signOut } = useManagerAuth();
+  const { managerInfo, signOut, user } = useManagerAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
@@ -171,38 +170,11 @@ const ManagerLayout = () => {
           <div className="flex items-center gap-4">
             <FullscreenButton variant="outline" showLabel={true} />
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="w-5 h-5 text-muted-foreground" />
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-destructive text-destructive-foreground text-xs">
-                    3
-                  </Badge>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium">New complaint received</span>
-                    <span className="text-xs text-muted-foreground">Room 205 - Noise issue</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium">Low inventory alert</span>
-                    <span className="text-xs text-muted-foreground">Minibar items running low</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium">Daily report ready</span>
-                    <span className="text-xs text-muted-foreground">January 2, 2026</span>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <NotificationBell 
+              userId={user?.id}
+              userType="manager"
+              variant="ghost"
+            />
 
             <div className="h-8 w-px bg-border" />
 
