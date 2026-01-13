@@ -18,7 +18,7 @@ const RoomCard = ({ room, onView, onEdit, actions }: RoomCardProps) => {
   
   const getAmenities = (): string[] => {
     if (!room.amenities) return [];
-    if (Array.isArray(room.amenities)) return room.amenities;
+    if (Array.isArray(room.amenities)) return room.amenities.map(a => String(a));
     return Object.keys(room.amenities).filter(key => room.amenities && (room.amenities as Record<string, boolean>)[key]);
   };
 
