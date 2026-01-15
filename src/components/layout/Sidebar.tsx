@@ -72,7 +72,7 @@ const Sidebar = () => {
             <Hotel className="w-5 h-5 text-accent" />
           </div>
           {!isCollapsed && (
-            <span className="font-serif text-lg text-foreground">Grand Azure</span>
+            <span className="font-serif text-lg text-foreground">hyatt regency</span>
           )}
         </div>
         <Button
