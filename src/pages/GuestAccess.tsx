@@ -102,7 +102,7 @@ const GuestAccess = () => {
         </div>
 
         <h1 className="text-2xl font-serif text-foreground mb-2">
-          Grand Azure Hotel
+          hyatt regency Hotel
         </h1>
 
         {status === "loading" && (
