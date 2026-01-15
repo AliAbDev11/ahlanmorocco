@@ -129,7 +129,7 @@ const HotelMap = () => {
           {/* Building outline */}
           <div className="absolute inset-8 border-2 border-dashed border-border rounded-xl">
             <div className="absolute top-2 left-2 text-xs text-muted-foreground">
-              Grand Azure Hotel
+              hyatt regency Hotel
             </div>
           </div>
         </div>
