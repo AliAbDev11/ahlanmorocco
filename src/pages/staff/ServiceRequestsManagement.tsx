@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Wrench, Search, Clock, User, Loader2, CheckCircle, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { notifyServiceRequestStatusChange } from "@/lib/notificationTriggers";
 
 interface ServiceRequest {
   id: string;
@@ -17,6 +18,7 @@ interface ServiceRequest {
   requested_time: string | null;
   status: string;
   created_at: string;
+  guest_id: string | null;
   guests?: { full_name: string } | null;
 }
 
@@ -79,7 +81,14 @@ const ServiceRequestsManagement = () => {
         updateData.completed_at = new Date().toISOString();
       }
 
+      const request = requests.find(r => r.id === requestId);
+
       await supabase.from("service_requests").update(updateData).eq("id", requestId);
+
+      // Send notification to guest
+      if (request?.guest_id) {
+        await notifyServiceRequestStatusChange(requestId, request.guest_id, status, request.service_type);
+      }
 
       toast({
         title: "Success",

@@ -13,7 +13,8 @@ import {
   LogOut,
   ChevronLeft,
   Menu,
-  BarChart3
+  BarChart3,
+  Compass
 } from 'lucide-react';
 import { FullscreenButton } from '@/components/ui/fullscreen-button';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
@@ -38,6 +39,7 @@ const navItems = [
   { path: '/manager/orders', icon: ShoppingCart, label: 'Orders & Revenue' },
   { path: '/manager/requests', icon: Wrench, label: 'Service Requests' },
   { path: '/manager/complaints', icon: MessageSquareWarning, label: 'Complaints' },
+  { path: '/manager/local-guide', icon: Compass, label: 'Local Guide' },
   { path: '/manager/staff', icon: UserCog, label: 'Staff' },
   { path: '/manager/reports', icon: FileText, label: 'Reports' },
   { path: '/manager/settings', icon: Settings, label: 'Settings' },

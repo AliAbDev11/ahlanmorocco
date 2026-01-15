@@ -3,10 +3,16 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { MapPin, Clock, Star, ExternalLink, Loader2 } from "lucide-react";
 import { useLocalAttractions } from "@/hooks/useLocalAttractions";
+import { useMemo } from "react";
 
 const LocalGuide = () => {
   const { t } = useTranslation();
   const { attractions, loading, error } = useLocalAttractions();
+
+  // Filter to only show active attractions for guests
+  const activeAttractions = useMemo(() => {
+    return attractions.filter((attraction) => (attraction as any).is_active !== false);
+  }, [attractions]);
 
   const handleGetDirections = (googleMapsUrl: string | null, name: string) => {
     if (googleMapsUrl) {
@@ -77,13 +83,13 @@ const LocalGuide = () => {
       </motion.div>
 
       {/* Attractions Grid */}
-      {attractions.length === 0 ? (
+      {activeAttractions.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No attractions available at the moment.</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {attractions.map((attraction, index) => (
+          {activeAttractions.map((attraction, index) => (
             <motion.div
               key={attraction.id}
               initial={{ opacity: 0, y: 20 }}

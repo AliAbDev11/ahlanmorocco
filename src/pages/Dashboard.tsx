@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { enUS, fr, es, de } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,7 @@ import { useGuestProfile } from "@/hooks/useGuestProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { FullscreenButton } from "@/components/ui/fullscreen-button";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { useGuestCheckout } from "@/hooks/useGuestCheckout";
 
 const languages = [
   { code: "en", label: "English", flag: "🇬🇧" },
@@ -47,6 +49,10 @@ const Dashboard = () => {
   const { t, i18n } = useTranslation();
   const { guest, loading: guestLoading } = useGuestProfile();
   const { user, guestSession, loading: authLoading, isAuthenticated } = useAuth();
+  
+  // Auto-logout check for guests past checkout
+  const { getCheckoutStatus } = useGuestCheckout(guestSession);
+  const checkoutStatus = getCheckoutStatus();
 
   const currentLanguage = i18n.language;
 
@@ -192,6 +198,15 @@ const Dashboard = () => {
                   ? `${t("common.checkout")}: ${formatCheckoutDate(checkOutDate)}`
                   : t("common.welcomeHotel")}
               </p>
+              {/* Checkout Status Warning */}
+              {checkoutStatus && (
+                <Badge 
+                  variant={checkoutStatus.variant === "destructive" ? "destructive" : "secondary"}
+                  className="mt-2"
+                >
+                  {checkoutStatus.message}
+                </Badge>
+              )}
             </div>
 
             {/* Ahlan Logo */}

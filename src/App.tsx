@@ -41,6 +41,7 @@ import ManagerComplaints from "./pages/manager/ManagerComplaints";
 import ManagerStaff from "./pages/manager/ManagerStaff";
 import ManagerReports from "./pages/manager/ManagerReports";
 import ManagerSettings from "./pages/manager/ManagerSettings";
+import ManagerLocalGuide from "./pages/manager/ManagerLocalGuide";
 
 const queryClient = new QueryClient();
 
@@ -100,6 +101,7 @@ const App = () => (
               <Route path="/manager/staff" element={<ManagerStaff />} />
               <Route path="/manager/reports" element={<ManagerReports />} />
               <Route path="/manager/settings" element={<ManagerSettings />} />
+              <Route path="/manager/local-guide" element={<ManagerLocalGuide />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />

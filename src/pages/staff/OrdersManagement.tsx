@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { UtensilsCrossed, Search, Clock, DollarSign, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { notifyOrderStatusChange } from "@/lib/notificationTriggers";
 
 interface OrderItem {
   id: string;
@@ -25,6 +26,7 @@ interface Order {
   special_requests: string | null;
   delivery_time: string | null;
   created_at: string;
+  guest_id: string | null;
   guests?: { full_name: string } | null;
 }
 
@@ -94,7 +96,15 @@ const OrdersManagement = () => {
         updateData.completed_at = new Date().toISOString();
       }
 
+      // Get the order to find guest_id for notification
+      const order = orders.find(o => o.id === orderId);
+      
       await supabase.from("orders").update(updateData).eq("id", orderId);
+
+      // Send notification to guest about status change
+      if (order?.guest_id) {
+        await notifyOrderStatusChange(orderId, order.guest_id, status);
+      }
 
       toast({
         title: "Success",
