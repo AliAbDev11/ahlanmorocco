@@ -41,5 +41,5 @@
   color: #888;
 }
 div.relative.overflow-hidden.h-\[400px\] {
-    overflow: hidden;
+    overflow: unset;
 }
