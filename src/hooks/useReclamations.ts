@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
+import { notifyComplaintCreated } from "@/lib/notificationTriggers";
 
 type Reclamation = Tables<"reclamations">;
 
@@ -70,6 +71,7 @@ export const useReclamations = () => {
       }
 
       const roomNumber = guest?.room_number || "Unknown";
+      const urgency = params.urgency || "medium";
 
       const { data, error: insertError } = await supabase
         .from("reclamations")
@@ -78,7 +80,7 @@ export const useReclamations = () => {
           room_number: roomNumber,
           category: params.category,
           description: params.description,
-          urgency: params.urgency || "medium",
+          urgency: urgency,
           status: "open",
         })
         .select()
@@ -87,6 +89,17 @@ export const useReclamations = () => {
       if (insertError) {
         throw new Error(insertError.message);
       }
+
+      // Trigger notifications for staff and managers
+      console.log("Complaint created, sending notifications...");
+      await notifyComplaintCreated(
+        data.id,
+        user.id,
+        roomNumber,
+        params.category,
+        urgency
+      );
+      console.log("Complaint notifications sent successfully");
 
       // Refresh the list
       await fetchReclamations();

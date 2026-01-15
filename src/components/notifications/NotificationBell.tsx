@@ -105,7 +105,7 @@ export const NotificationBell = ({
   };
 
   return (
-    <div ref={dropdownRef} className="relative">
+    <div ref={dropdownRef} className="relative inline-block">
       {/* Bell Button */}
       <Button
         variant={variant}
@@ -142,13 +142,13 @@ export const NotificationBell = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 z-40"
+            className="fixed inset-0 bg-black/20 z-[9998]"
             onClick={() => setIsOpen(false)}
           />
         )}
       </AnimatePresence>
 
-      {/* Dropdown Panel */}
+      {/* Dropdown Panel - Right-aligned below bell */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -156,7 +156,8 @@ export const NotificationBell = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed right-4 top-16 sm:absolute sm:right-0 sm:top-auto sm:mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-md bg-card border border-border rounded-xl shadow-2xl z-50"
+            className="absolute right-0 top-full mt-2 w-[380px] max-w-[calc(100vw-2rem)] bg-card border border-border rounded-xl shadow-2xl z-[9999]"
+            style={{ transformOrigin: 'top right' }}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border">
