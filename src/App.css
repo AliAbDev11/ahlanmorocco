@@ -40,6 +40,6 @@
 .read-the-docs {
   color: #888;
 }
-div.relative.overflow-hidden.h-\[400px\] {
+relative.overflow-hidden.h-\[400px\] {
     overflow: unset;
 }
