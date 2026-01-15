@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
+import { notifyServiceRequestCreated } from "@/lib/notificationTriggers";
 
 type ServiceRequest = Tables<"service_requests">;
 
@@ -87,6 +88,16 @@ export const useServiceRequests = () => {
       if (insertError) {
         throw new Error(insertError.message);
       }
+
+      // Trigger notifications for staff and managers
+      console.log("Service request created, sending notifications...");
+      await notifyServiceRequestCreated(
+        data.id,
+        user.id,
+        roomNumber,
+        params.serviceType
+      );
+      console.log("Service request notifications sent successfully");
 
       // Refresh the list
       await fetchRequests();

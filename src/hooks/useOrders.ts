@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
+import { notifyOrderPlaced } from "@/lib/notificationTriggers";
 
 interface OrderItem {
   id: string;
@@ -61,6 +62,16 @@ export const useOrders = () => {
       if (insertError) {
         throw new Error(insertError.message);
       }
+
+      // Trigger notifications for staff and managers
+      console.log("Order created, sending notifications...");
+      await notifyOrderPlaced(
+        data.id,
+        user.id,
+        roomNumber,
+        params.totalPrice
+      );
+      console.log("Notifications sent successfully");
 
       return { data, error: null };
     } catch (err) {
