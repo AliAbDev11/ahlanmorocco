@@ -246,7 +246,7 @@ const ManagerDashboard = () => {
       <div>
         <h1 className="text-3xl font-serif font-bold text-foreground">Dashboard Overview</h1>
         <p className="text-muted-foreground mt-1">
-          Welcome back! Here's what's happening at Grand Azure Hotel today.
+          Welcome back! Here's what's happening at hyatt regency Hotel today.
         </p>
       </div>
 
