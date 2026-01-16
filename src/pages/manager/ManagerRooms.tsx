@@ -385,7 +385,7 @@ const ManagerRooms = () => {
             <Download className="w-4 h-4" />
             Export CSV
           </Button>
-          <FullscreenButton />
+          {/* <FullscreenButton /> */}
         </div>
       </div>
 
