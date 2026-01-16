@@ -39,10 +39,13 @@ export const useNotifications = ({
 
   const fetchNotifications = useCallback(async () => {
     if (!userId) {
+      setNotifications([]);
+      setUnreadCount(0);
       setLoading(false);
       return;
     }
 
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('notifications')
@@ -52,13 +55,19 @@ export const useNotifications = ({
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      if (error) throw error;
-
-      const typedNotifications = (data || []) as Notification[];
-      setNotifications(typedNotifications);
-      setUnreadCount(typedNotifications.filter(n => !n.is_read).length);
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        setNotifications([]);
+        setUnreadCount(0);
+      } else {
+        const typedNotifications = (data || []) as Notification[];
+        setNotifications(typedNotifications);
+        setUnreadCount(typedNotifications.filter(n => !n.is_read).length);
+      }
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }
