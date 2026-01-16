@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { FullscreenButton } from '@/components/ui/fullscreen-button';
 
 // Room components
 import RoomStatsCards from '@/components/manager/rooms/RoomStatsCards';
@@ -385,7 +384,6 @@ const ManagerRooms = () => {
             <Download className="w-4 h-4" />
             Export CSV
           </Button>
-          {/* <FullscreenButton /> */}
         </div>
       </div>
 
