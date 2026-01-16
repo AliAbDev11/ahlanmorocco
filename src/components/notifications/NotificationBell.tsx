@@ -90,7 +90,8 @@ export const NotificationBell = ({
       await markAsRead(notification.id);
     }
     
-    if (notification.action_url) {
+    // Only navigate for staff and manager, guests get informational only
+    if (userType !== 'guest' && notification.action_url) {
       navigate(notification.action_url);
       setIsOpen(false);
     }
@@ -186,7 +187,7 @@ export const NotificationBell = ({
             </div>
 
             {/* Notifications List */}
-            <ScrollArea className="h-[400px]">
+            <ScrollArea className="max-h-[500px]">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -203,8 +204,9 @@ export const NotificationBell = ({
                     <div
                       key={notification.id}
                       className={cn(
-                        'p-4 hover:bg-muted/50 cursor-pointer transition-colors relative group',
-                        !notification.is_read && 'bg-primary/5'
+                        'p-4 transition-colors relative group',
+                        !notification.is_read && 'bg-primary/5',
+                        userType !== 'guest' && 'hover:bg-muted/50 cursor-pointer'
                       )}
                       onClick={() => handleNotificationClick(notification)}
                     >
@@ -264,8 +266,8 @@ export const NotificationBell = ({
                         </div>
                       </div>
                       
-                      {/* Action URL indicator */}
-                      {notification.action_url && (
+                      {/* Action URL indicator - only show for staff/manager */}
+                      {userType !== 'guest' && notification.action_url && (
                         <div className="absolute right-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity">
                           <ExternalLink className="h-3 w-3 text-muted-foreground" />
                         </div>
