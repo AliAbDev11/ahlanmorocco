@@ -157,7 +157,7 @@ export const NotificationBell = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 top-full mt-2 w-[380px] max-w-[calc(100vw-2rem)] bg-card border border-border rounded-xl shadow-2xl z-[9999]"
+            className="fixed sm:absolute right-4 sm:right-0 top-14 sm:top-full sm:mt-2 w-[calc(100vw-2rem)] sm:w-[380px] max-w-[400px] bg-card border border-border rounded-xl shadow-2xl z-[9999]"
             style={{ transformOrigin: 'top right' }}
           >
             {/* Header */}
