@@ -27,7 +27,7 @@ export const sendMessageToN8N = async (
       signal: controller.signal,
       body: JSON.stringify({
         message: messageText,
-        guest_id: guestData?.id ?? `guest-${Date.now()}`,
+        guest_id: guestData?.id ?? `${Date.now()}`,
         guest_name: guestData?.full_name ?? "Guest",
         room_number: guestData?.room_number ?? "Unknown",
         ...(guestData?.phone_number && { phone_number: guestData.phone_number }),
@@ -72,6 +72,7 @@ export const sendAudioToN8N = async (
     const formData = new FormData();
     const extension = audioBlob.type.includes("webm") ? "webm" : "mp4";
     formData.append("audio", audioBlob, `voice-message.${extension}`);
+    formData.append("guest_id", guestData?.id ?? `${Date.now()}`);
     formData.append("guest_id", guestData?.id ?? `guest-${Date.now()}`);
     formData.append("guest_name", guestData?.full_name ?? "Guest");
     formData.append("room_number", guestData?.room_number ?? "Unknown");

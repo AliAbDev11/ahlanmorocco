@@ -12,41 +12,45 @@ export const useGuestData = (): GuestData | null => {
   const [guestData, setGuestData] = useState<GuestData | null>(null);
 
   useEffect(() => {
-    // First try to get guest session (from QR code login - most reliable source)
-    const guestSession = localStorage.getItem("guestSession");
-    if (guestSession) {
-      try {
-        const parsed = JSON.parse(guestSession);
-        if (parsed.guestId && parsed.fullName && parsed.roomNumber) {
-          setGuestData({
-            id: parsed.guestId,
-            full_name: parsed.fullName,
-            room_number: parsed.roomNumber,
-            phone_number: parsed.phoneNumber || undefined,
-          });
-          return;
+    // Log all localStorage keys to debug
+    console.log('All localStorage keys:', Object.keys(localStorage));
+    console.log('guestSession:', localStorage.getItem('guestSession'));
+    console.log('hotelGuest:', localStorage.getItem('hotelGuest'));
+
+    // Try multiple possible localStorage keys and formats
+    const possibleKeys = ['guestSession', 'hotelGuest', 'guest', 'currentGuest'];
+
+    for (const key of possibleKeys) {
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          console.log(`Parsed ${key}:`, parsed);
+
+          // Extract data from various possible formats
+          const id = parsed.guestId || parsed.id || parsed.guest_id || `${Date.now()}`;
+          const name = parsed.fullName || parsed.full_name || parsed.username || parsed.name || 'Guest';
+          const room = parsed.roomNumber || parsed.room_number || parsed.room || 'Unknown';
+          const phone = parsed.phoneNumber || parsed.phone_number || parsed.phone;
+
+          // Only set if we have valid name and room (not fallback values)
+          if (name !== 'Guest' && room !== 'Unknown') {
+            setGuestData({
+              id: id.toString().replace('guest-', ''), // Remove 'guest-' prefix if present
+              full_name: name,
+              room_number: room.toString(),
+              phone_number: phone || undefined,
+            });
+            console.log('Guest data set:', { id, name, room, phone });
+            return;
+          }
+        } catch (e) {
+          console.error(`Failed to parse ${key}:`, e);
         }
-      } catch (e) {
-        console.error("Failed to parse guestSession:", e);
       }
     }
 
-    // Fallback to hotelGuest storage
-    const stored = localStorage.getItem("hotelGuest");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setGuestData({
-          id: parsed.id || `guest-${Date.now()}`,
-          full_name: parsed.full_name || parsed.username || "Guest",
-          room_number: parsed.room_number || parsed.room || "Unknown",
-          phone_number: parsed.phone_number || undefined,
-          username: parsed.username,
-        });
-      } catch (e) {
-        console.error("Failed to parse guest data:", e);
-      }
-    }
+    console.warn('No valid guest data found in localStorage');
   }, []);
 
   return guestData;
