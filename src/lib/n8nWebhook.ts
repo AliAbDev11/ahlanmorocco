@@ -15,6 +15,9 @@ export const sendMessageToN8N = async (
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
+  // DEBUG: Check what guestData actually looks like before sending
+  console.log("Sending to n8n with guestData:", guestData); 
+
   try {
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: "POST",
@@ -24,10 +27,11 @@ export const sendMessageToN8N = async (
       signal: controller.signal,
       body: JSON.stringify({
         message: messageText,
-        guest_id: guestData?.id,
-        guest_name: guestData?.full_name,
-        room_number: guestData?.room_number,
-        phone_number: guestData?.phone_number,
+        // Fix: Use || null or || "" to ensure the key is sent even if data is missing
+        guest_id: guestData?.id || null, 
+        guest_name: guestData?.full_name || "Guest",
+        room_number: guestData?.room_number || null,
+        phone_number: guestData?.phone_number || null,
         timestamp: new Date().toISOString(),
         message_type: "text",
       }),
@@ -40,18 +44,18 @@ export const sendMessageToN8N = async (
     }
 
     const botResponse = await response.json();
-    
+
     return {
       reply: botResponse.reply || botResponse.message || botResponse.output || "I'm here to help!",
       suggestions: botResponse.suggestions,
     };
   } catch (error) {
     clearTimeout(timeoutId);
-    
+
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error("Request timed out. Please try again.");
     }
-    
+
     console.error("Error sending to n8n:", error);
     throw error;
   }
