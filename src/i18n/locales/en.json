@@ -33,10 +33,23 @@
     "localGuideDesc": "Discover the best attractions, restaurants, and hidden gems nearby",
     "inRoomDining": "In-Room Dining",
     "inRoomDiningDesc": "Explore our gourmet menu and order directly to your room",
+    "nearbyCities": "Nearby Cities",
+    "nearbyCitiesDesc": "Discover exciting destinations and day trips near the hotel",
+    "exploreCities": "Explore Cities",
     "spaAppointment": "Spa Appointment",
     "spaMessage": "Your massage is scheduled for 3:00 PM",
     "restaurantReservation": "Restaurant Reservation",
     "restaurantMessage": "Table for 2 at Azure Terrace, 7:30 PM"
+  },
+  "nearbyCities": {
+    "title": "Nearby Cities",
+    "subtitle": "Discover exciting destinations and day trips from the hotel",
+    "topAttractions": "Top Attractions",
+    "getDirections": "Directions",
+    "travelTips": "Travel Tips",
+    "tip1": "Book day trips through our concierge for the best rates and reliable transportation.",
+    "tip2": "Most cities are best visited early morning to avoid heat and crowds.",
+    "tip3": "Ask our staff about private tours for a more personalized experience."
   },
   "menu": {
     "title": "Menu",

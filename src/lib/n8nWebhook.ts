@@ -27,6 +27,7 @@ export const sendMessageToN8N = async (
         guest_id: guestData?.id || "anonymous",
         guest_name: guestData?.full_name || "Guest",
         room_number: guestData?.room_number || "Unknown",
+        phone_number: guestData?.phone_number || null,
         timestamp: new Date().toISOString(),
         message_type: "text",
       }),

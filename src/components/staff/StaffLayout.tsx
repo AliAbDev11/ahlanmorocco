@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import ahlanLogo from "@/assets/ahlan-logo.png";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { FullscreenButton } from "@/components/ui/fullscreen-button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -200,6 +201,13 @@ const StaffLayout = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Fullscreen Button */}
+          <FullscreenButton 
+            variant="ghost" 
+            showLabel={false} 
+            className="text-foreground" 
+          />
+
           <NotificationBell
             userId={user?.id}
             userType="staff"
@@ -322,6 +330,13 @@ const StaffLayout = () => {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Fullscreen Button */}
+            <FullscreenButton 
+              variant="outline" 
+              showLabel={true} 
+              className="" 
+            />
 
             <NotificationBell
               userId={user?.id}
