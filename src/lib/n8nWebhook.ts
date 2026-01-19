@@ -11,7 +11,7 @@ export interface N8NResponse {
 export const sendMessageToN8N = async (
   messageText: string,
   guestData: GuestData | null
-  console.log(guestData)
+  console.log(guestData);
 ): Promise<N8NResponse> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
