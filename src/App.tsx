@@ -12,6 +12,7 @@ import Services from "./pages/Services";
 import HotelMap from "./pages/HotelMap";
 import Menu from "./pages/Menu";
 import LocalGuide from "./pages/LocalGuide";
+import NearbyCities from "./pages/NearbyCities";
 import Requests from "./pages/Requests";
 import MainLayout from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/map" element={<HotelMap />} />
               <Route path="/menu" element={<Menu />} />
               <Route path="/guide" element={<LocalGuide />} />
+              <Route path="/cities" element={<NearbyCities />} />
               <Route path="/requests" element={<Requests />} />
             </Route>
             

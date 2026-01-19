@@ -313,11 +313,11 @@ export type Database = {
           delivery_time: string | null
           guest_id: string | null
           id: string
-          items: Json
-          room_number: string
+          items: Json | null
+          room_number: string | null
           special_requests: string | null
           status: string | null
-          total_price: number
+          total_price: number | null
           updated_at: string | null
         }
         Insert: {
@@ -327,11 +327,11 @@ export type Database = {
           delivery_time?: string | null
           guest_id?: string | null
           id?: string
-          items: Json
-          room_number: string
+          items?: Json | null
+          room_number?: string | null
           special_requests?: string | null
           status?: string | null
-          total_price: number
+          total_price?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -341,11 +341,11 @@ export type Database = {
           delivery_time?: string | null
           guest_id?: string | null
           id?: string
-          items?: Json
-          room_number?: string
+          items?: Json | null
+          room_number?: string | null
           special_requests?: string | null
           status?: string | null
-          total_price?: number
+          total_price?: number | null
           updated_at?: string | null
         }
         Relationships: [

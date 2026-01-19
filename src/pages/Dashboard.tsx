@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Globe,
   Check,
+  Building2,
 } from "lucide-react";
 import ahlanLogo from "@/assets/ahlan-logo.png";
 import { useGuestProfile } from "@/hooks/useGuestProfile";
@@ -107,12 +108,6 @@ const Dashboard = () => {
     { icon: Utensils, label: t("dashboard.orderFood"), path: "/menu", color: "bg-accent" },
     { icon: Sparkles, label: t("dashboard.hotelServices"), path: "/services", color: "bg-primary" },
     { icon: Map, label: t("dashboard.hotelMap"), path: "/map", color: "bg-accent" },
-  ];
-
-  // Get translated notifications
-  const notifications = [
-    { id: 1, title: t("dashboard.spaAppointment"), message: t("dashboard.spaMessage"), time: "2h" },
-    { id: 2, title: t("dashboard.restaurantReservation"), message: t("dashboard.restaurantMessage"), time: "5h" },
   ];
 
   if (authLoading || guestLoading) {
@@ -251,43 +246,6 @@ const Dashboard = () => {
         </div>
       </motion.section>
 
-      {/* Upcoming Activities */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="mb-8"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-serif text-foreground">{t("dashboard.upcoming")}</h2>
-          <Button variant="ghost" size="sm">
-            {t("common.viewAll")} <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        </div>
-        <div className="space-y-3">
-          {notifications.map((notification, index) => (
-            <motion.div
-              key={notification.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.25 + index * 0.05 }}
-              className="bg-card rounded-xl p-4 border border-border flex items-center gap-4"
-            >
-              <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-5 h-5 text-accent" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-foreground">{notification.title}</h3>
-                <p className="text-sm text-muted-foreground truncate">{notification.message}</p>
-              </div>
-              <span className="text-xs text-muted-foreground flex-shrink-0">
-                {notification.time}
-              </span>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
-
       {/* Explore Section */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
@@ -311,16 +269,16 @@ const Dashboard = () => {
           </button>
 
           <button
-            onClick={() => navigate("/menu")}
+            onClick={() => navigate("/cities")}
             className="bg-gradient-to-br from-accent to-gold-dark rounded-xl p-6 text-left group transition-all hover:shadow-lg"
           >
-            <Utensils className="w-10 h-10 text-accent-foreground mb-4" />
-            <h3 className="text-xl font-serif text-accent-foreground mb-2">{t("dashboard.inRoomDining")}</h3>
+            <Building2 className="w-10 h-10 text-accent-foreground mb-4" />
+            <h3 className="text-xl font-serif text-accent-foreground mb-2">{t("dashboard.nearbyCities")}</h3>
             <p className="text-sm text-accent-foreground/80">
-              {t("dashboard.inRoomDiningDesc")}
+              {t("dashboard.nearbyCitiesDesc")}
             </p>
             <span className="inline-flex items-center gap-1 text-accent-foreground text-sm font-medium mt-4 group-hover:gap-2 transition-all">
-              {t("common.viewMenu")} <ChevronRight className="w-4 h-4" />
+              {t("dashboard.exploreCities")} <ChevronRight className="w-4 h-4" />
             </span>
           </button>
         </div>

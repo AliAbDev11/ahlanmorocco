@@ -33,10 +33,23 @@
     "localGuideDesc": "Découvrez les meilleures attractions, restaurants et trésors cachés à proximité",
     "inRoomDining": "Repas en chambre",
     "inRoomDiningDesc": "Explorez notre menu gastronomique et commandez directement dans votre chambre",
+    "nearbyCities": "Villes proches",
+    "nearbyCitiesDesc": "Découvrez des destinations passionnantes et des excursions d'une journée près de l'hôtel",
+    "exploreCities": "Explorer les villes",
     "spaAppointment": "Rendez-vous spa",
     "spaMessage": "Votre massage est prévu à 15h00",
     "restaurantReservation": "Réservation restaurant",
     "restaurantMessage": "Table pour 2 à Azure Terrace, 19h30"
+  },
+  "nearbyCities": {
+    "title": "Villes proches",
+    "subtitle": "Découvrez des destinations passionnantes et des excursions d'une journée depuis l'hôtel",
+    "topAttractions": "Principales attractions",
+    "getDirections": "Itinéraire",
+    "travelTips": "Conseils de voyage",
+    "tip1": "Réservez des excursions d'une journée via notre conciergerie pour les meilleurs tarifs et un transport fiable.",
+    "tip2": "La plupart des villes sont mieux visitées tôt le matin pour éviter la chaleur et la foule.",
+    "tip3": "Demandez à notre personnel des visites privées pour une expérience plus personnalisée."
   },
   "menu": {
     "title": "Menu",
