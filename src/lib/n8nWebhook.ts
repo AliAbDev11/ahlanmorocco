@@ -27,11 +27,10 @@ export const sendMessageToN8N = async (
       signal: controller.signal,
       body: JSON.stringify({
         message: messageText,
-        // Fix: Use || null or || "" to ensure the key is sent even if data is missing
-        guest_id: guestData?.id || null, 
-        guest_name: guestData?.full_name || "Guest",
-        room_number: guestData?.room_number || null,
-        phone_number: guestData?.phone_number || null,
+        guest_id: guestData?.id ?? `guest-${Date.now()}`,
+        guest_name: guestData?.full_name ?? "Guest",
+        room_number: guestData?.room_number ?? "Unknown",
+        ...(guestData?.phone_number && { phone_number: guestData.phone_number }),
         timestamp: new Date().toISOString(),
         message_type: "text",
       }),
@@ -73,9 +72,12 @@ export const sendAudioToN8N = async (
     const formData = new FormData();
     const extension = audioBlob.type.includes("webm") ? "webm" : "mp4";
     formData.append("audio", audioBlob, `voice-message.${extension}`);
-    formData.append("guest_id", guestData?.id || "anonymous");
-    formData.append("guest_name", guestData?.full_name || "Guest");
-    formData.append("room_number", guestData?.room_number || "Unknown");
+    formData.append("guest_id", guestData?.id ?? `guest-${Date.now()}`);
+    formData.append("guest_name", guestData?.full_name ?? "Guest");
+    formData.append("room_number", guestData?.room_number ?? "Unknown");
+    if (guestData?.phone_number) {
+      formData.append("phone_number", guestData.phone_number);
+    }
     formData.append("audio_duration", audioDuration.toString());
     formData.append("timestamp", new Date().toISOString());
     formData.append("message_type", "audio");
