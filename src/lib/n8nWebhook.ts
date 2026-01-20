@@ -1,6 +1,6 @@
 import { GuestData } from "@/hooks/useGuestData";
 
-const N8N_WEBHOOK_URL = "https://arkx.app.n8n.cloud/webhook-test/Ahlan-Assistant";
+const N8N_WEBHOOK_URL = "https://arkx.app.n8n.cloud/webhook/Ahlan-Assistant";
 const TIMEOUT_MS = 30000;
 
 export interface N8NResponse {
