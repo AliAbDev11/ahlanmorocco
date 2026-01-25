@@ -1,56 +1,79 @@
 import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js"; 
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL, 
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+);
 
 export interface GuestData {
   id: string;
   full_name: string;
   room_number: string;
   phone_number?: string;
-  username?: string;
+  email?: string;
 }
 
 export const useGuestData = (): GuestData | null => {
   const [guestData, setGuestData] = useState<GuestData | null>(null);
 
   useEffect(() => {
-    // Log all localStorage keys to debug
-    console.log('All localStorage keys:', Object.keys(localStorage));
-    console.log('guestSession:', localStorage.getItem('guestSession'));
-    console.log('hotelGuest:', localStorage.getItem('hotelGuest'));
-
-    // Try multiple possible localStorage keys and formats
-    const possibleKeys = ['guestSession', 'hotelGuest', 'guest', 'currentGuest'];
-
-    for (const key of possibleKeys) {
-      const stored = localStorage.getItem(key);
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          console.log(`Parsed ${key}:`, parsed);
-
-          // Extract data from various possible formats
-          const id = parsed.guestId || parsed.id || parsed.guest_id || `${Date.now()}`;
-          const name = parsed.fullName || parsed.full_name || parsed.username || parsed.name || 'Guest';
-          const room = parsed.roomNumber || parsed.room_number || parsed.room || 'Unknown';
-          const phone = parsed.phoneNumber || parsed.phone_number || parsed.phone;
-
-          // Only set if we have valid name and room (not fallback values)
-          if (name !== 'Guest' && room !== 'Unknown') {
-            setGuestData({
-              id: id.toString().replace('guest-', ''), // Remove 'guest-' prefix if present
-              full_name: name,
-              room_number: room.toString(),
-              phone_number: phone || undefined,
-            });
-            console.log('Guest data set:', { id, name, room, phone });
-            return;
+    const fetchGuestProfile = async () => {
+      let userId = null;
+      let userEmail = null;
+      
+      const allKeys = { ...localStorage, ...sessionStorage };
+      
+      // 1. Find the User ID in storage
+      for (const key of Object.keys(allKeys)) {
+        if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+          try {
+            const item = JSON.parse(allKeys[key] || '{}');
+            const user = item.user || item;
+            if (user.id) {
+              userId = user.id;
+              userEmail = user.email;
+              break;
+            }
+          } catch (e) { 
+            // Silent catch for parsing errors
           }
-        } catch (e) {
-          console.error(`Failed to parse ${key}:`, e);
         }
       }
-    }
 
-    console.warn('No valid guest data found in localStorage');
+      // 2. Fetch real data from Supabase
+      if (userId) {
+        try {
+          const { data, error } = await supabase
+            .from('guests')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+          if (!error && data) {
+            setGuestData({
+              id: data.id,
+              full_name: data.full_name || "Guest", 
+              room_number: data.room_number || "Unknown",
+              phone_number: data.phone_number,
+              email: userEmail
+            });
+          } else {
+            // Fallback if DB fetch fails but we have an ID
+            setGuestData({
+              id: userId,
+              full_name: userEmail || "Guest",
+              room_number: "Unknown",
+              email: userEmail
+            });
+          }
+        } catch (err) {
+          // Silent catch for network errors
+        }
+      }
+    };
+
+    fetchGuestProfile();
   }, []);
 
   return guestData;
