@@ -13,10 +13,7 @@ export const sendMessageToN8N = async (
   guestData: GuestData | null
 ): Promise<N8NResponse> => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  // DEBUG: Check what guestData actually looks like before sending
-  console.log("Sending to n8n with guestData:", guestData); 
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS); 
 
   try {
     const response = await fetch(N8N_WEBHOOK_URL, {
