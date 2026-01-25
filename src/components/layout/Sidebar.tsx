@@ -115,17 +115,6 @@ const Sidebar = () => {
 
       {/* User section */}
       <div className="p-4 border-t border-border">
-        <div className={cn("flex items-center gap-3 mb-4", isCollapsed && "justify-center")}>
-          <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
-            <span className="text-accent font-medium">G</span>
-          </div>
-          {!isCollapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">Guest</p>
-              <p className="text-xs text-muted-foreground">Suite 405</p>
-            </div>
-          )}
-        </div>
         <Button
           variant="ghost"
           className={cn("w-full justify-start text-muted-foreground", isCollapsed && "justify-center")}
