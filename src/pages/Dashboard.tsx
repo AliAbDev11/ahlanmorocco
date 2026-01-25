@@ -188,8 +188,7 @@ const Dashboard = () => {
                 {displayName}
               </h1>
               <p className="text-primary-foreground/80 flex items-center gap-2 text-sm">
-                <Clock className="w-4 h-4" />
-                {roomNumber} • {checkOutDate 
+                <Clock className="w-4 h-4" />Room Number: {roomNumber} • {checkOutDate 
                   ? `${t("common.checkout")}: ${formatCheckoutDate(checkOutDate)}`
                   : t("common.welcomeHotel")}
               </p>
