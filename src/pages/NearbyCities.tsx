@@ -28,7 +28,7 @@ const cities: City[] = [
     description: "Morocco's capital city featuring the historic Kasbah of the Udayas, Hassan Tower, and the beautiful Chellah necropolis.",
     rating: 4.7,
     attractions: ["Kasbah of the Udayas", "Hassan Tower", "Chellah", "Mohammed V Mausoleum"],
-    imageUrl: "https://images.unsplash.com/photo-1569383746724-6f1b882b8f46?w=800&auto=format&fit=crop&q=60",
+    imageUrl: "https://images.unsplash.com/photo-1671471122995-b27ba131195b?q=80&w=1136&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     mapsUrl: "https://maps.google.com/?q=Rabat,Morocco"
   },
   {
@@ -40,7 +40,7 @@ const cities: City[] = [
     description: "The Red City famous for Jemaa el-Fnaa square, Bahia Palace, and vibrant souks filled with spices and crafts.",
     rating: 4.8,
     attractions: ["Jemaa el-Fnaa", "Bahia Palace", "Majorelle Garden", "Koutoubia Mosque"],
-    imageUrl: "https://images.unsplash.com/photo-1597212720452-43f92e5e8f44?w=800&auto=format&fit=crop&q=60",
+    imageUrl: "https://images.unsplash.com/photo-1585004607620-fb4c44331e73?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     mapsUrl: "https://maps.google.com/?q=Marrakech,Morocco"
   },
   {
@@ -52,7 +52,7 @@ const cities: City[] = [
     description: "Home to the world's oldest university and the largest medieval medina, renowned for its traditional tanneries.",
     rating: 4.6,
     attractions: ["Fes el-Bali Medina", "Al-Qarawiyyin University", "Chouara Tannery", "Bou Inania Madrasa"],
-    imageUrl: "https://images.unsplash.com/photo-1579018603628-7f5c97975fa9?w=800&auto=format&fit=crop&q=60",
+    imageUrl: "https://images.unsplash.com/photo-1557503799-fac6a98054b3?q=80&w=1093&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     mapsUrl: "https://maps.google.com/?q=Fes,Morocco"
   },
   {
@@ -64,7 +64,7 @@ const cities: City[] = [
     description: "Gateway between Europe and Africa, known for its stunning views of the Strait of Gibraltar and bohemian past.",
     rating: 4.5,
     attractions: ["Cap Spartel", "Hercules Cave", "Kasbah Museum", "Grand Socco"],
-    imageUrl: "https://images.unsplash.com/photo-1553899017-94f34d3c8c90?w=800&auto=format&fit=crop&q=60",
+    imageUrl: "https://images.unsplash.com/photo-1633264542743-c1acdb5eff0e?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     mapsUrl: "https://maps.google.com/?q=Tangier,Morocco"
   },
   {
@@ -90,6 +90,54 @@ const cities: City[] = [
     attractions: ["Essaouira Medina", "Skala de la Kasbah", "Essaouira Beach", "Port"],
     imageUrl: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=800&auto=format&fit=crop&q=60",
     mapsUrl: "https://maps.google.com/?q=Essaouira,Morocco"
+  },
+  // {
+  //   id: "7",
+  //   name: "Casablanca",
+  //   nameAr: "الدار البيضاء",
+  //   distance: 0,
+  //   travelTime: "Local",
+  //   description: "The economic capital and Art Deco masterpiece. Explore the city you are currently staying in!",
+  //   rating: 4.8,
+  //   attractions: ["Hassan II Mosque", "Habous Quarter", "Morocco Mall", "Corniche"],
+  //   imageUrl: "https://images.unsplash.com/photo-1538230575309-59dfc388ae36?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  //   mapsUrl: "https://maps.google.com/?q=Casablanca,Morocco"
+  // },
+  {
+    id: "8",
+    name: "Agadir",
+    nameAr: "أكادير",
+    distance: 460,
+    travelTime: "5h 30min",
+    description: "Morocco's premier resort city, famous for its crescent beach, year-round sunshine, and modern marina.",
+    rating: 4.5,
+    attractions: ["Agadir Beach", "Kasbah Oufella", "Souk El Had", "Crocoparc"],
+    imageUrl: "https://images.unsplash.com/photo-1702840648310-bfaacb533afb?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    mapsUrl: "https://maps.google.com/?q=Agadir,Morocco"
+  },
+  {
+    id: "9",
+    name: "taghazout",
+    nameAr: "تغازوت",
+    distance: 480,
+    travelTime: "6h 00min",
+    description: "A laid-back fishing village turned world-class surfing destination with a bohemian vibe.",
+    rating: 4.6,
+    attractions: ["Anchor Point", "Panorama Beach", "Skate Park", "Surf Camps"],
+    imageUrl: "https://images.unsplash.com/photo-1538050558691-dfaad62c8ea0?q=80&w=1154&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    mapsUrl: "https://maps.google.com/?q=Taghazout,Morocco"
+  },
+  {
+    id: "10",
+    name: "Tetouan",
+    nameAr: "تطوان",
+    distance: 370,
+    travelTime: "4h 30min",
+    description: "The 'White Dove' of the north, featuring a UNESCO-listed medina with unique Andalusian influence.",
+    rating: 4.6,
+    attractions: ["The Medina", "Feddan Park", "Archeological Museum", "Royal Palace"],
+    imageUrl: "https://images.unsplash.com/photo-1579894461465-e8cdbe670cd1?q=80&w=1275&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    mapsUrl: "https://maps.google.com/?q=Tetouan,Morocco"
   }
 ];
 
@@ -109,15 +157,6 @@ const NearbyCities = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard")}
-          className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          {t("common.back")}
-        </Button>
-        
         <div className="flex items-center gap-4 mb-2">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-gold-dark flex items-center justify-center">
             <Building2 className="w-6 h-6 text-accent-foreground" />
