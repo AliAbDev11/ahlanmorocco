@@ -14,7 +14,7 @@ const GuestAccess = () => {
 
   useEffect(() => {
     const token = searchParams.get("token");
-    
+
     if (token) {
       validateAndLoginGuest(token);
     } else {
@@ -102,7 +102,7 @@ const GuestAccess = () => {
         </div>
 
         <h1 className="text-2xl font-serif text-foreground mb-2">
-          hyatt regency Hotel
+          Hyatt regency Hotel
         </h1>
 
         {status === "loading" && (
@@ -145,12 +145,10 @@ const GuestAccess = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mt-8"
           >
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-              status === "expired" ? "bg-yellow-100" : "bg-red-100"
-            }`}>
-              <AlertCircle className={`w-8 h-8 ${
-                status === "expired" ? "text-yellow-600" : "text-red-600"
-              }`} />
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${status === "expired" ? "bg-yellow-100" : "bg-red-100"
+              }`}>
+              <AlertCircle className={`w-8 h-8 ${status === "expired" ? "text-yellow-600" : "text-red-600"
+                }`} />
             </div>
             <h2 className="text-xl font-semibold text-foreground mb-2">
               {status === "expired" ? "QR Code Expired" : "Access Denied"}

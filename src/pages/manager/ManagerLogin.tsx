@@ -79,7 +79,7 @@ const ManagerLogin = () => {
       <Card className="w-full max-w-md relative z-10 bg-card/95 backdrop-blur-sm border-border/50 shadow-2xl">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <img src={ahlanLogo} alt="hyatt regency Hotel" className="h-16 w-auto" />
+            <img src={ahlanLogo} alt="Hyatt regency Hotel" className="h-16 w-auto" />
           </div>
           <div className="space-y-2">
             <CardTitle className="text-2xl font-serif text-foreground flex items-center justify-center gap-2">

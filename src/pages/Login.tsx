@@ -26,7 +26,7 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast({
         title: "Missing credentials",
@@ -91,7 +91,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Hero image/branding */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
@@ -102,7 +102,7 @@ const Login = () => {
           <div className="absolute top-20 left-20 w-64 h-64 bg-accent rounded-full blur-3xl" />
           <div className="absolute bottom-40 right-20 w-96 h-96 bg-accent/50 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="relative z-10 flex flex-col justify-center items-center w-full p-12 text-primary-foreground">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -114,17 +114,17 @@ const Login = () => {
               <Hotel className="w-12 h-12 text-accent" />
             </div>
           </motion.div>
-          
-          <motion.h1 
+
+          <motion.h1
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
             className="text-4xl md:text-5xl font-serif text-center mb-4"
           >
-            hyatt regency Hotel
+            Hyatt regency Hotel
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.5 }}
@@ -132,7 +132,7 @@ const Login = () => {
           >
             Your personal concierge at your fingertips. Experience luxury service, 24/7.
           </motion.p>
-          
+
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -157,7 +157,7 @@ const Login = () => {
 
       {/* Right side - Login form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background">
-        <motion.div 
+        <motion.div
           initial={{ x: 20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
@@ -175,8 +175,8 @@ const Login = () => {
               {isSignUp ? "Create Account" : "Welcome Back"}
             </h2>
             <p className="text-muted-foreground">
-              {isSignUp 
-                ? "Sign up to access hotel services" 
+              {isSignUp
+                ? "Sign up to access hotel services"
                 : "Enter your credentials to continue"}
             </p>
           </div>
@@ -216,8 +216,8 @@ const Login = () => {
               </div>
             </div>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               variant="gold"
               size="lg"
               className="w-full"
@@ -243,8 +243,8 @@ const Login = () => {
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-sm text-accent hover:underline"
             >
-              {isSignUp 
-                ? "Already have an account? Sign in" 
+              {isSignUp
+                ? "Already have an account? Sign in"
                 : "Don't have an account? Sign up"}
             </button>
           </div>

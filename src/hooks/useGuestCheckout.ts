@@ -22,7 +22,7 @@ export const useGuestCheckout = (guestSession: GuestSession | null) => {
 
       if (now > checkOutWithGrace) {
         // Guest is past checkout, log them out
-        
+
         // Deactivate guest account
         await supabase
           .from("guests")
@@ -40,7 +40,7 @@ export const useGuestCheckout = (guestSession: GuestSession | null) => {
 
         toast({
           title: "Session Expired",
-          description: "Your stay has ended. Thank you for choosing hyatt regency Hotel!",
+          description: "Your stay has ended. Thank you for choosing Hyatt regency Hotel!",
         });
 
         navigate("/");

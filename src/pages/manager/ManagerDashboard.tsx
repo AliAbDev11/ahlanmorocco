@@ -3,11 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Users, 
-  DoorOpen, 
-  ShoppingCart, 
-  Wrench, 
+import {
+  Users,
+  DoorOpen,
+  ShoppingCart,
+  Wrench,
   MessageSquareWarning,
   TrendingUp,
   TrendingDown,
@@ -16,13 +16,13 @@ import {
   CalendarCheck,
   CalendarX
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -174,13 +174,13 @@ const ManagerDashboard = () => {
       const { data: serviceRequests } = await supabase
         .from('service_requests')
         .select('service_type');
-      
+
       const serviceTypes: Record<string, number> = {};
       (serviceRequests || []).forEach(req => {
         const type = req.service_type || 'Other';
         serviceTypes[type] = (serviceTypes[type] || 0) + 1;
       });
-      
+
       setServiceTypeData(Object.entries(serviceTypes).map(([name, value]) => ({ name, value })));
 
     } catch (error) {
@@ -193,48 +193,48 @@ const ManagerDashboard = () => {
   const occupancyRate = stats ? Math.round((stats.occupiedRooms / stats.totalRooms) * 100) : 0;
 
   const statCards = [
-    { 
-      title: 'Active Guests', 
-      value: stats?.activeGuests || 0, 
-      icon: Users, 
+    {
+      title: 'Active Guests',
+      value: stats?.activeGuests || 0,
+      icon: Users,
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10',
       trend: '+5%'
     },
-    { 
-      title: 'Occupancy Rate', 
-      value: `${occupancyRate}%`, 
-      icon: DoorOpen, 
+    {
+      title: 'Occupancy Rate',
+      value: `${occupancyRate}%`,
+      icon: DoorOpen,
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
       trend: '+2%'
     },
-    { 
-      title: 'Today\'s Revenue', 
-      value: `$${stats?.todayRevenue?.toFixed(2) || '0.00'}`, 
-      icon: DollarSign, 
+    {
+      title: 'Today\'s Revenue',
+      value: `$${stats?.todayRevenue?.toFixed(2) || '0.00'}`,
+      icon: DollarSign,
       color: 'text-accent',
       bgColor: 'bg-accent/10',
       trend: '+12%'
     },
-    { 
-      title: 'Pending Orders', 
-      value: stats?.pendingOrders || 0, 
-      icon: ShoppingCart, 
+    {
+      title: 'Pending Orders',
+      value: stats?.pendingOrders || 0,
+      icon: ShoppingCart,
       color: 'text-orange-500',
       bgColor: 'bg-orange-500/10'
     },
-    { 
-      title: 'Service Requests', 
-      value: stats?.pendingRequests || 0, 
-      icon: Wrench, 
+    {
+      title: 'Service Requests',
+      value: stats?.pendingRequests || 0,
+      icon: Wrench,
       color: 'text-purple-500',
       bgColor: 'bg-purple-500/10'
     },
-    { 
-      title: 'Open Complaints', 
-      value: stats?.openComplaints || 0, 
-      icon: MessageSquareWarning, 
+    {
+      title: 'Open Complaints',
+      value: stats?.openComplaints || 0,
+      icon: MessageSquareWarning,
       color: 'text-destructive',
       bgColor: 'bg-destructive/10'
     },
@@ -246,7 +246,7 @@ const ManagerDashboard = () => {
       <div>
         <h1 className="text-3xl font-serif font-bold text-foreground">Dashboard Overview</h1>
         <p className="text-muted-foreground mt-1">
-          Welcome back! Here's what's happening at hyatt regency Hotel today.
+          Welcome back! Here's what's happening at Hyatt regency Hotel today.
         </p>
       </div>
 
@@ -419,44 +419,44 @@ const ManagerDashboard = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={occupancyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                   />
-                  <YAxis 
+                  <YAxis
                     yAxisId="left"
                     tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                     tickFormatter={(value) => `${value}%`}
                   />
-                  <YAxis 
-                    yAxisId="right" 
+                  <YAxis
+                    yAxisId="right"
                     orientation="right"
                     tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                     tickFormatter={(value) => `$${value}`}
                   />
-                  <Tooltip 
-                    contentStyle={{ 
+                  <Tooltip
+                    contentStyle={{
                       backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px'
                     }}
                   />
                   <Legend />
-                  <Line 
+                  <Line
                     yAxisId="left"
-                    type="monotone" 
-                    dataKey="occupancy" 
+                    type="monotone"
+                    dataKey="occupancy"
                     name="Occupancy %"
-                    stroke="hsl(var(--primary))" 
+                    stroke="hsl(var(--primary))"
                     strokeWidth={2}
                     dot={{ fill: 'hsl(var(--primary))' }}
                   />
-                  <Line 
+                  <Line
                     yAxisId="right"
-                    type="monotone" 
-                    dataKey="revenue" 
+                    type="monotone"
+                    dataKey="revenue"
                     name="Revenue $"
-                    stroke="hsl(var(--accent))" 
+                    stroke="hsl(var(--accent))"
                     strokeWidth={2}
                     dot={{ fill: 'hsl(var(--accent))' }}
                   />
@@ -493,8 +493,8 @@ const ManagerDashboard = () => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
+                  <Tooltip
+                    contentStyle={{
                       backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px'
@@ -526,14 +526,14 @@ const ManagerDashboard = () => {
               <BarChart data={serviceTypeData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
+                <YAxis
+                  dataKey="name"
+                  type="category"
                   width={120}
-                  tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} 
+                  tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                 />
-                <Tooltip 
-                  contentStyle={{ 
+                <Tooltip
+                  contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px'

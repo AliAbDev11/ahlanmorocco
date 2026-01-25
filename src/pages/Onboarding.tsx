@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { 
-  MessageSquare, 
-  Utensils, 
-  Map, 
-  Sparkles, 
-  ArrowRight, 
+import {
+  MessageSquare,
+  Utensils,
+  Map,
+  Sparkles,
+  ArrowRight,
   ArrowLeft,
   Home,
   Compass,
@@ -48,7 +48,7 @@ const steps = [
   {
     icon: Sparkles,
     title: "You're All Set!",
-    description: "Enjoy your stay at hyatt regency Hotel. We're here to make every moment exceptional.",
+    description: "Enjoy your stay at Hyatt regency Hotel. We're here to make every moment exceptional.",
     color: "bg-accent",
   },
 ];
@@ -81,7 +81,7 @@ const Onboarding = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Dimmed backdrop with blur */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={handleClose}
       />
@@ -157,13 +157,12 @@ const Onboarding = () => {
               <button
                 key={index}
                 onClick={() => setCurrentStep(index)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentStep
+                className={`h-2 rounded-full transition-all duration-300 ${index === currentStep
                     ? "w-6 bg-accent"
                     : index < currentStep
-                    ? "w-2 bg-accent/50"
-                    : "w-2 bg-border"
-                }`}
+                      ? "w-2 bg-accent/50"
+                      : "w-2 bg-border"
+                  }`}
               />
             ))}
           </div>

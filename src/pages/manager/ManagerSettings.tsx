@@ -7,11 +7,11 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useManagerAuth } from '@/hooks/useManagerAuth';
-import { 
-  Settings, 
-  User, 
-  Bell, 
-  Shield, 
+import {
+  Settings,
+  User,
+  Bell,
+  Shield,
   Building2,
   Save,
   Mail,
@@ -21,7 +21,7 @@ import {
 const ManagerSettings = () => {
   const { managerInfo } = useManagerAuth();
   const { toast } = useToast();
-  
+
   const [notifications, setNotifications] = useState({
     email: true,
     criticalAlerts: true,
@@ -255,7 +255,7 @@ const ManagerSettings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Hotel Name</Label>
-              <Input value="hyatt regency Hotel" disabled className="bg-muted" />
+              <Input value="Hyatt regency Hotel" disabled className="bg-muted" />
             </div>
             <div className="space-y-2">
               <Label>Location</Label>

@@ -29,7 +29,7 @@ const MobileNav = () => {
     <>
       {/* Top bar with menu */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-50 flex items-center justify-between px-4">
-        <span className="font-serif text-lg text-foreground">hyatt regency</span>
+        <span className="font-serif text-lg text-foreground">Hyatt regency</span>
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">

@@ -129,7 +129,7 @@ const HotelMap = () => {
           {/* Building outline */}
           <div className="absolute inset-8 border-2 border-dashed border-border rounded-xl">
             <div className="absolute top-2 left-2 text-xs text-muted-foreground">
-              hyatt regency Hotel
+              Hyatt regency Hotel
             </div>
           </div>
         </div>
@@ -142,9 +142,8 @@ const HotelMap = () => {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2 + index * 0.05, type: "spring", stiffness: 300 }}
             onClick={() => setSelectedLocation(location)}
-            className={`map-location ${
-              selectedLocation?.id === location.id ? "ring-4 ring-accent/50 scale-110" : ""
-            }`}
+            className={`map-location ${selectedLocation?.id === location.id ? "ring-4 ring-accent/50 scale-110" : ""
+              }`}
             style={{ left: `${location.x}%`, top: `${location.y}%` }}
           >
             <MapPin className="w-5 h-5 text-accent-foreground" />
@@ -204,11 +203,10 @@ const HotelMap = () => {
           <button
             key={location.id}
             onClick={() => setSelectedLocation(location)}
-            className={`text-left p-4 rounded-xl border transition-all ${
-              selectedLocation?.id === location.id
+            className={`text-left p-4 rounded-xl border transition-all ${selectedLocation?.id === location.id
                 ? "bg-accent/10 border-accent"
                 : "bg-card border-border hover:border-accent/50"
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
