@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Mic } from "lucide-react";
+import VoiceAssistantModal from "@/components/chat/VoiceAssistantModal";
 import ahlanAssistantLogo from "@/assets/ahlan-assistant-logo.webp";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ const Chatbot = () => {
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   const [lastFailedAudio, setLastFailedAudio] = useState<{ blob: Blob; duration: number } | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const guestData = useGuestData();
@@ -194,17 +196,28 @@ const Chatbot = () => {
         animate={{ opacity: 1, y: 0 }}
         className="flex-shrink-0 p-6 border-b border-border bg-card"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl overflow-hidden">
-            <img src={ahlanAssistantLogo} alt="AI Assistant" className="w-full h-full object-cover" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl overflow-hidden">
+              <img src={ahlanAssistantLogo} alt="AI Assistant" className="w-full h-full object-cover" />
+            </div>
+            <div>
+              <h1 className="text-xl font-serif text-foreground">{t("chatbot.title")}</h1>
+              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                {t("chatbot.online")}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-serif text-foreground">{t("chatbot.title")}</h1>
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              {t("chatbot.online")}
-            </p>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsVoiceModalOpen(true)}
+            className="flex items-center gap-2 rounded-full"
+          >
+            <Mic className="w-4 h-4" />
+            <span className="hidden sm:inline">Voice</span>
+          </Button>
         </div>
       </motion.div>
 
@@ -259,6 +272,12 @@ const Chatbot = () => {
           disabled={isTyping}
         />
       </div>
+
+      {/* Voice Assistant Modal */}
+      <VoiceAssistantModal 
+        open={isVoiceModalOpen} 
+        onOpenChange={setIsVoiceModalOpen} 
+      />
     </div>
   );
 };
