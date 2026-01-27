@@ -11,6 +11,50 @@ interface CreateServiceRequestParams {
   requestedTime?: string;
 }
 
+interface GuestSession {
+  guestId: string;
+  fullName: string;
+  roomNumber: string;
+}
+
+// Helper to get current user ID from either Supabase auth or localStorage guest session
+const getCurrentGuestInfo = async (): Promise<{ guestId: string; roomNumber: string } | null> => {
+  // First try Supabase auth
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (user) {
+    // Get room number from guests table
+    const { data: guest } = await supabase
+      .from("guests")
+      .select("room_number")
+      .eq("id", user.id)
+      .maybeSingle();
+    
+    return {
+      guestId: user.id,
+      roomNumber: guest?.room_number || "Unknown"
+    };
+  }
+  
+  // Fall back to localStorage guest session (QR code login)
+  const storedSession = localStorage.getItem("guestSession");
+  if (storedSession) {
+    try {
+      const parsed: GuestSession = JSON.parse(storedSession);
+      if (parsed.guestId) {
+        return {
+          guestId: parsed.guestId,
+          roomNumber: parsed.roomNumber || "Unknown"
+        };
+      }
+    } catch (e) {
+      console.error("Error parsing guest session:", e);
+    }
+  }
+  
+  return null;
+};
+
 export const useServiceRequests = () => {
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,9 +63,9 @@ export const useServiceRequests = () => {
 
   const fetchRequests = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const guestInfo = await getCurrentGuestInfo();
 
-      if (!user) {
+      if (!guestInfo) {
         setLoading(false);
         return;
       }
@@ -29,7 +73,7 @@ export const useServiceRequests = () => {
       const { data, error: fetchError } = await supabase
         .from("service_requests")
         .select("*")
-        .eq("guest_id", user.id)
+        .eq("guest_id", guestInfo.guestId)
         .order("created_at", { ascending: false });
 
       if (fetchError) {
@@ -53,30 +97,17 @@ export const useServiceRequests = () => {
     setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const guestInfo = await getCurrentGuestInfo();
 
-      if (!user) {
+      if (!guestInfo) {
         throw new Error("You must be logged in to create a request");
       }
-
-      // Get guest profile for room number
-      const { data: guest, error: guestError } = await supabase
-        .from("guests")
-        .select("room_number")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (guestError) {
-        throw new Error(guestError.message);
-      }
-
-      const roomNumber = guest?.room_number || "Unknown";
 
       const { data, error: insertError } = await supabase
         .from("service_requests")
         .insert({
-          guest_id: user.id,
-          room_number: roomNumber,
+          guest_id: guestInfo.guestId,
+          room_number: guestInfo.roomNumber,
           service_type: params.serviceType,
           description: params.description,
           requested_time: params.requestedTime,
@@ -93,8 +124,8 @@ export const useServiceRequests = () => {
       console.log("Service request created, sending notifications...");
       await notifyServiceRequestCreated(
         data.id,
-        user.id,
-        roomNumber,
+        guestInfo.guestId,
+        guestInfo.roomNumber,
         params.serviceType
       );
       console.log("Service request notifications sent successfully");
