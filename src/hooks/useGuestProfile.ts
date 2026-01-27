@@ -4,6 +4,14 @@ import { Tables } from "@/integrations/supabase/types";
 
 type Guest = Tables<"guests">;
 
+interface GuestSession {
+  guestId: string;
+  fullName: string;
+  roomNumber: string;
+  checkInDate?: string;
+  checkOutDate?: string;
+}
+
 export const useGuestProfile = () => {
   const [guest, setGuest] = useState<Guest | null>(null);
   const [loading, setLoading] = useState(true);
@@ -12,9 +20,27 @@ export const useGuestProfile = () => {
   useEffect(() => {
     const fetchGuestProfile = async () => {
       try {
+        let guestId: string | null = null;
+
+        // First try Supabase auth
         const { data: { user } } = await supabase.auth.getUser();
         
-        if (!user) {
+        if (user) {
+          guestId = user.id;
+        } else {
+          // Fall back to localStorage guest session (QR code login)
+          const storedSession = localStorage.getItem("guestSession");
+          if (storedSession) {
+            try {
+              const parsed: GuestSession = JSON.parse(storedSession);
+              guestId = parsed.guestId;
+            } catch (e) {
+              console.error("Error parsing guest session:", e);
+            }
+          }
+        }
+
+        if (!guestId) {
           setLoading(false);
           return;
         }
@@ -22,7 +48,7 @@ export const useGuestProfile = () => {
         const { data, error: fetchError } = await supabase
           .from("guests")
           .select("*")
-          .eq("id", user.id)
+          .eq("id", guestId)
           .maybeSingle();
 
         if (fetchError) {

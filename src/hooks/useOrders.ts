@@ -17,6 +17,50 @@ interface CreateOrderParams {
   specialRequests?: string;
 }
 
+interface GuestSession {
+  guestId: string;
+  fullName: string;
+  roomNumber: string;
+}
+
+// Helper to get current user ID from either Supabase auth or localStorage guest session
+const getCurrentGuestInfo = async (): Promise<{ guestId: string; roomNumber: string } | null> => {
+  // First try Supabase auth
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (user) {
+    // Get room number from guests table
+    const { data: guest } = await supabase
+      .from("guests")
+      .select("room_number")
+      .eq("id", user.id)
+      .maybeSingle();
+    
+    return {
+      guestId: user.id,
+      roomNumber: guest?.room_number || "Unknown"
+    };
+  }
+  
+  // Fall back to localStorage guest session (QR code login)
+  const storedSession = localStorage.getItem("guestSession");
+  if (storedSession) {
+    try {
+      const parsed: GuestSession = JSON.parse(storedSession);
+      if (parsed.guestId) {
+        return {
+          guestId: parsed.guestId,
+          roomNumber: parsed.roomNumber || "Unknown"
+        };
+      }
+    } catch (e) {
+      console.error("Error parsing guest session:", e);
+    }
+  }
+  
+  return null;
+};
+
 export const useOrders = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,30 +70,17 @@ export const useOrders = () => {
     setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const guestInfo = await getCurrentGuestInfo();
 
-      if (!user) {
+      if (!guestInfo) {
         throw new Error("You must be logged in to place an order");
       }
-
-      // Get guest profile for room number
-      const { data: guest, error: guestError } = await supabase
-        .from("guests")
-        .select("room_number")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (guestError) {
-        throw new Error(guestError.message);
-      }
-
-      const roomNumber = guest?.room_number || "Unknown";
 
       const { data, error: insertError } = await supabase
         .from("orders")
         .insert({
-          guest_id: user.id,
-          room_number: roomNumber,
+          guest_id: guestInfo.guestId,
+          room_number: guestInfo.roomNumber,
           items: params.items as unknown as Json,
           total_price: params.totalPrice,
           delivery_time: params.deliveryTime,
@@ -67,8 +98,8 @@ export const useOrders = () => {
       console.log("Order created, sending notifications...");
       await notifyOrderPlaced(
         data.id,
-        user.id,
-        roomNumber,
+        guestInfo.guestId,
+        guestInfo.roomNumber,
         params.totalPrice
       );
       console.log("Notifications sent successfully");
