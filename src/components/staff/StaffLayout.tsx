@@ -343,37 +343,6 @@ const StaffLayout = () => {
               userType="staff"
               variant="ghost"
             />
-
-            <div className="h-8 w-px bg-border" />
-
-            {/* Profile Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8 bg-accent">
-                    <AvatarFallback className="bg-accent text-accent-foreground text-sm">
-                      {staffInfo?.full_name ? getInitials(staffInfo.full_name) : "S"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden sm:inline text-sm font-medium text-foreground">
-                    {staffInfo?.full_name || "Staff"}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-card">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </header>
 
