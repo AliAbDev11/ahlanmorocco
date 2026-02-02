@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
 import {
   Users,
   DoorOpen,
@@ -59,6 +60,7 @@ interface RecentActivity {
 const COLORS = ['hsl(var(--accent))', 'hsl(var(--primary))', 'hsl(var(--destructive))', 'hsl(var(--muted-foreground))'];
 
 const ManagerDashboard = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [occupancyData, setOccupancyData] = useState<any[]>([]);
@@ -194,7 +196,7 @@ const ManagerDashboard = () => {
 
   const statCards = [
     {
-      title: 'Active Guests',
+      title: t('manager.activeGuests'),
       value: stats?.activeGuests || 0,
       icon: Users,
       color: 'text-blue-500',
@@ -202,7 +204,7 @@ const ManagerDashboard = () => {
       trend: '+5%'
     },
     {
-      title: 'Occupancy Rate',
+      title: t('manager.occupancyRate'),
       value: `${occupancyRate}%`,
       icon: DoorOpen,
       color: 'text-green-500',
@@ -210,7 +212,7 @@ const ManagerDashboard = () => {
       trend: '+2%'
     },
     {
-      title: 'Today\'s Revenue',
+      title: t('manager.todaysRevenue'),
       value: `$${stats?.todayRevenue?.toFixed(2) || '0.00'}`,
       icon: DollarSign,
       color: 'text-accent',
@@ -218,21 +220,21 @@ const ManagerDashboard = () => {
       trend: '+12%'
     },
     {
-      title: 'Pending Orders',
+      title: t('manager.pendingOrders'),
       value: stats?.pendingOrders || 0,
       icon: ShoppingCart,
       color: 'text-orange-500',
       bgColor: 'bg-orange-500/10'
     },
     {
-      title: 'Service Requests',
+      title: t('manager.serviceRequests'),
       value: stats?.pendingRequests || 0,
       icon: Wrench,
       color: 'text-purple-500',
       bgColor: 'bg-purple-500/10'
     },
     {
-      title: 'Open Complaints',
+      title: t('manager.openComplaints'),
       value: stats?.openComplaints || 0,
       icon: MessageSquareWarning,
       color: 'text-destructive',
@@ -244,9 +246,9 @@ const ManagerDashboard = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-serif font-bold text-foreground">Dashboard Overview</h1>
+        <h1 className="text-3xl font-serif font-bold text-foreground">{t('manager.dashboardOverview')}</h1>
         <p className="text-muted-foreground mt-1">
-          Welcome back! Here's what's happening at Hyatt regency Hotel today.
+          {t('manager.welcomeMessage')}
         </p>
       </div>
 
@@ -293,8 +295,8 @@ const ManagerDashboard = () => {
         {/* Room Status */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Room Status</CardTitle>
-            <CardDescription>Current room availability</CardDescription>
+            <CardTitle className="text-lg">{t('manager.roomStatus')}</CardTitle>
+            <CardDescription>{t('manager.currentAvailability')}</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -308,21 +310,21 @@ const ManagerDashboard = () => {
                 <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-green-500" />
-                    <span className="text-sm font-medium">Available</span>
+                    <span className="text-sm font-medium">{t('manager.available')}</span>
                   </div>
                   <span className="text-lg font-bold text-green-600">{stats?.availableRooms}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-blue-500/10 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-blue-500" />
-                    <span className="text-sm font-medium">Occupied</span>
+                    <span className="text-sm font-medium">{t('manager.occupied')}</span>
                   </div>
                   <span className="text-lg font-bold text-blue-600">{stats?.occupiedRooms}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-orange-500/10 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-orange-500" />
-                    <span className="text-sm font-medium">Maintenance</span>
+                    <span className="text-sm font-medium">{t('manager.maintenance')}</span>
                   </div>
                   <span className="text-lg font-bold text-orange-600">{stats?.maintenanceRooms}</span>
                 </div>
@@ -334,8 +336,8 @@ const ManagerDashboard = () => {
         {/* Today's Activity */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Today's Activity</CardTitle>
-            <CardDescription>Check-ins and check-outs</CardDescription>
+            <CardTitle className="text-lg">{t('manager.todaysActivity')}</CardTitle>
+            <CardDescription>{t('manager.checkInsCheckouts')}</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -350,14 +352,14 @@ const ManagerDashboard = () => {
                   <CalendarCheck className="w-8 h-8 text-green-500" />
                   <div>
                     <p className="text-2xl font-bold text-foreground">{stats?.todayCheckIns}</p>
-                    <p className="text-sm text-muted-foreground">Check-ins Today</p>
+                    <p className="text-sm text-muted-foreground">{t('manager.checkInsToday')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 p-4 bg-red-500/10 rounded-lg">
                   <CalendarX className="w-8 h-8 text-red-500" />
                   <div>
                     <p className="text-2xl font-bold text-foreground">{stats?.todayCheckOuts}</p>
-                    <p className="text-sm text-muted-foreground">Check-outs Today</p>
+                    <p className="text-sm text-muted-foreground">{t('manager.checkOutsToday')}</p>
                   </div>
                 </div>
               </div>
@@ -368,8 +370,8 @@ const ManagerDashboard = () => {
         {/* Recent Orders */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Recent Orders</CardTitle>
-            <CardDescription>Latest order activity</CardDescription>
+            <CardTitle className="text-lg">{t('manager.recentOrders')}</CardTitle>
+            <CardDescription>{t('manager.latestOrderActivity')}</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -379,7 +381,7 @@ const ManagerDashboard = () => {
                 ))}
               </div>
             ) : recentActivity.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t('manager.noRecentActivity')}</p>
             ) : (
               <div className="space-y-2">
                 {recentActivity.map((activity) => (
@@ -409,8 +411,8 @@ const ManagerDashboard = () => {
         {/* Occupancy Trend */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Occupancy & Revenue Trend</CardTitle>
-            <CardDescription>Last 14 days performance</CardDescription>
+            <CardTitle className="text-lg">{t('manager.occupancyRevenueTrend')}</CardTitle>
+            <CardDescription>{t('manager.last14DaysPerformance')}</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -469,8 +471,8 @@ const ManagerDashboard = () => {
         {/* Revenue Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Revenue by Category</CardTitle>
-            <CardDescription>Distribution of revenue sources</CardDescription>
+            <CardTitle className="text-lg">{t('manager.revenueByCategory')}</CardTitle>
+            <CardDescription>{t('manager.revenueDistribution')}</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -511,15 +513,15 @@ const ManagerDashboard = () => {
       {/* Service Requests Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Service Request Types</CardTitle>
-          <CardDescription>Breakdown of service requests by category</CardDescription>
+          <CardTitle className="text-lg">{t('manager.serviceRequestTypes')}</CardTitle>
+          <CardDescription>{t('manager.requestsBreakdown')}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <Skeleton className="h-[250px] w-full" />
           ) : serviceTypeData.length === 0 ? (
             <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-              No service request data available
+              {t('manager.noServiceRequestData')}
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={250}>

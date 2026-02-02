@@ -40,22 +40,22 @@ const languages = [
   { code: "de", label: "Deutsch", flag: "🇩🇪" },
 ];
 
-const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/staff" },
-  { icon: Users, label: "Guests", path: "/staff/guests" },
-  { icon: BedDouble, label: "Rooms", path: "/staff/rooms" },
-  { icon: UtensilsCrossed, label: "Orders", path: "/staff/orders" },
-  { icon: Wrench, label: "Service Requests", path: "/staff/requests" },
-  { icon: MessageSquareWarning, label: "Reclamations", path: "/staff/reclamations" },
-];
-
 const StaffLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { staffInfo, signOut, user } = useStaffAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const navItems = [
+    { icon: LayoutDashboard, label: t('nav.dashboard'), path: "/staff" },
+    { icon: Users, label: t('staff.guests'), path: "/staff/guests" },
+    { icon: BedDouble, label: t('staff.rooms'), path: "/staff/rooms" },
+    { icon: UtensilsCrossed, label: t('staff.orders'), path: "/staff/orders" },
+    { icon: Wrench, label: t('staff.serviceRequests'), path: "/staff/requests" },
+    { icon: MessageSquareWarning, label: t('staff.reclamations'), path: "/staff/reclamations" },
+  ];
 
   const handleLogout = async () => {
     await signOut();
@@ -299,7 +299,7 @@ const StaffLayout = () => {
           <div className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-accent" />
             <h1 className="text-lg font-serif font-semibold text-foreground">
-              Staff Portal
+              {t('staff.portal')}
             </h1>
           </div>
 
@@ -313,7 +313,7 @@ const StaffLayout = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-card">
-                <DropdownMenuLabel>Select Language</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('common.selectLanguage')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {languages.map((lang) => (
                   <DropdownMenuItem
