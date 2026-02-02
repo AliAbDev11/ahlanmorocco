@@ -1,5 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useManagerAuth } from '@/hooks/useManagerAuth';
+import { useTranslation } from 'react-i18next';
 import { 
   LayoutDashboard, 
   Users, 
@@ -14,7 +15,8 @@ import {
   ChevronLeft,
   Menu,
   BarChart3,
-  Compass
+  Compass,
+  Globe
 } from 'lucide-react';
 import { FullscreenButton } from '@/components/ui/fullscreen-button';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
@@ -32,28 +34,45 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import ahlanLogo from '@/assets/ahlan-logo.png';
 
-const navItems = [
-  { path: '/manager', icon: LayoutDashboard, label: 'Dashboard', exact: true },
-  { path: '/manager/guests', icon: Users, label: 'Guests' },
-  { path: '/manager/rooms', icon: DoorOpen, label: 'Rooms' },
-  { path: '/manager/orders', icon: ShoppingCart, label: 'Orders & Revenue' },
-  { path: '/manager/requests', icon: Wrench, label: 'Service Requests' },
-  { path: '/manager/complaints', icon: MessageSquareWarning, label: 'Complaints' },
-  { path: '/manager/local-guide', icon: Compass, label: 'Local Guide' },
-  { path: '/manager/staff', icon: UserCog, label: 'Staff' },
-  { path: '/manager/reports', icon: FileText, label: 'Reports' },
-  { path: '/manager/settings', icon: Settings, label: 'Settings' },
+const languages = [
+  { code: "en", label: "English", flag: "🇬🇧" },
+  { code: "fr", label: "Français", flag: "🇫🇷" },
+  { code: "es", label: "Español", flag: "🇪🇸" },
+  { code: "de", label: "Deutsch", flag: "🇩🇪" },
 ];
 
 const ManagerLayout = () => {
   const { managerInfo, signOut, user } = useManagerAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t, i18n } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
+
+  const navItems = [
+    { path: '/manager', icon: LayoutDashboard, label: t('nav.dashboard'), exact: true },
+    { path: '/manager/guests', icon: Users, label: t('manager.guests') },
+    { path: '/manager/rooms', icon: DoorOpen, label: t('manager.rooms') },
+    { path: '/manager/orders', icon: ShoppingCart, label: t('manager.ordersRevenue') },
+    { path: '/manager/requests', icon: Wrench, label: t('manager.serviceRequests') },
+    { path: '/manager/complaints', icon: MessageSquareWarning, label: t('manager.complaints') },
+    { path: '/manager/local-guide', icon: Compass, label: t('manager.localGuide') },
+    { path: '/manager/staff', icon: UserCog, label: t('manager.staffManagement') },
+    { path: '/manager/reports', icon: FileText, label: t('manager.reports') },
+    { path: '/manager/settings', icon: Settings, label: t('manager.settings') },
+  ];
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/manager/login');
+  };
+
+  const handleLanguageChange = (langCode: string) => {
+    i18n.changeLanguage(langCode);
+    localStorage.setItem("language", langCode);
+  };
+
+  const getCurrentLanguage = () => {
+    return languages.find((lang) => lang.code === i18n.language) || languages[0];
   };
 
   const isActive = (path: string, exact?: boolean) => {
@@ -165,11 +184,38 @@ const ManagerLayout = () => {
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-accent" />
             <h1 className="text-lg font-serif font-semibold text-foreground">
-              Manager Dashboard
+              {t('manager.dashboard')}
             </h1>
           </div>
           
           <div className="flex items-center gap-4">
+            {/* Language Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  <span className="text-sm font-medium">{getCurrentLanguage().flag}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-card">
+                <DropdownMenuLabel>{t('common.selectLanguage')}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {languages.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.code}
+                    onClick={() => handleLanguageChange(lang.code)}
+                    className={cn(
+                      "cursor-pointer",
+                      i18n.language === lang.code && "bg-muted"
+                    )}
+                  >
+                    <span className="mr-2">{lang.flag}</span>
+                    {lang.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <FullscreenButton variant="outline" showLabel={true} />
             
             <NotificationBell 

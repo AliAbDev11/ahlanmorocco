@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, BedDouble, UtensilsCrossed, Wrench, MessageSquareWarning, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "react-i18next";
 
 interface DashboardStats {
   activeGuests: number;
@@ -14,6 +15,7 @@ interface DashboardStats {
 }
 
 const StaffDashboard = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
@@ -70,42 +72,42 @@ const StaffDashboard = () => {
 
   const statCards = [
     {
-      title: "Active Guests",
+      title: t('staff.activeGuests'),
       value: stats?.activeGuests || 0,
       icon: Users,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
     },
     {
-      title: "Available Rooms",
+      title: t('staff.availableRooms'),
       value: stats?.availableRooms || 0,
       icon: BedDouble,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
     },
     {
-      title: "Occupied Rooms",
+      title: t('staff.occupiedRooms'),
       value: stats?.occupiedRooms || 0,
       icon: BedDouble,
       color: "text-primary",
       bgColor: "bg-primary/10",
     },
     {
-      title: "Pending Orders",
+      title: t('staff.pendingOrders'),
       value: stats?.pendingOrders || 0,
       icon: UtensilsCrossed,
       color: "text-accent",
       bgColor: "bg-accent/10",
     },
     {
-      title: "Pending Requests",
+      title: t('staff.pendingRequests'),
       value: stats?.pendingRequests || 0,
       icon: Wrench,
       color: "text-orange-500",
       bgColor: "bg-orange-500/10",
     },
     {
-      title: "Open Complaints",
+      title: t('staff.openComplaints'),
       value: stats?.openReclamations || 0,
       icon: MessageSquareWarning,
       color: "text-destructive",
@@ -116,8 +118,8 @@ const StaffDashboard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-serif font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Welcome to the staff management portal</p>
+        <h1 className="text-3xl font-serif font-bold text-foreground">{t('staff.dashboard')}</h1>
+        <p className="text-muted-foreground mt-1">{t('staff.welcomeMessage')}</p>
       </div>
 
       {/* Stats Grid */}
@@ -154,7 +156,7 @@ const StaffDashboard = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Recent Orders
+            {t('staff.recentOrders')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -167,7 +169,7 @@ const StaffDashboard = () => {
                 ))}
             </div>
           ) : recentActivity.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No recent activity</p>
+            <p className="text-muted-foreground text-center py-8">{t('staff.noRecentActivity')}</p>
           ) : (
             <div className="space-y-3">
               {recentActivity.map((order) => (
