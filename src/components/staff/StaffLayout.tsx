@@ -355,14 +355,9 @@ const StaffLayout = () => {
                       {staffInfo?.full_name ? getInitials(staffInfo.full_name) : "S"}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="hidden sm:flex flex-col items-start">
-                    <span className="text-sm font-medium text-foreground">
-                      {staffInfo?.full_name || "Staff"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {staffInfo?.role || "Staff Member"}
-                    </span>
-                  </div>
+                  <span className="hidden sm:inline text-sm font-medium text-foreground">
+                    {staffInfo?.full_name || "Staff"}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-card">
