@@ -255,7 +255,7 @@ const ManagerSettings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Hotel Name</Label>
-              <Input value="Hyatt regency Hotel" disabled className="bg-muted" />
+              <Input value="Grand Azur Hotel" disabled className="bg-muted" />
             </div>
             <div className="space-y-2">
               <Label>Location</Label>

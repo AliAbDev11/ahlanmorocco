@@ -40,7 +40,7 @@ export const useGuestCheckout = (guestSession: GuestSession | null) => {
 
         toast({
           title: "Session Expired",
-          description: "Your stay has ended. Thank you for choosing Hyatt regency Hotel!",
+          description: "Your stay has ended. Thank you for choosing Grand Azur Hotel!",
         });
 
         navigate("/");

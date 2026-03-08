@@ -48,7 +48,7 @@ const steps = [
   {
     icon: Sparkles,
     title: "You're All Set!",
-    description: "Enjoy your stay at Hyatt regency Hotel. We're here to make every moment exceptional.",
+    description: "Enjoy your stay at Grand Azur Hotel. We're here to make every moment exceptional.",
     color: "bg-accent",
   },
 ];

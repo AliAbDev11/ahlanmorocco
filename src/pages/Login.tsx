@@ -121,7 +121,7 @@ const Login = () => {
             transition={{ delay: 0.4, duration: 0.5 }}
             className="text-4xl md:text-5xl font-serif text-center mb-4"
           >
-            Hyatt regency Hotel
+            Grand Azur Hotel
           </motion.h1>
 
           <motion.p

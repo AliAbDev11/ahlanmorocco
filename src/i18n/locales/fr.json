@@ -63,7 +63,7 @@
   "manager": {
     "dashboard": "Tableau de bord Manager",
     "dashboardOverview": "Vue d'ensemble",
-    "welcomeMessage": "Bon retour ! Voici ce qui se passe à l'hôtel Hyatt regency aujourd'hui.",
+    "welcomeMessage": "Bon retour ! Voici ce qui se passe à l'hôtel Grand Azur aujourd'hui.",
     "activeGuests": "Clients actifs",
     "occupancyRate": "Taux d'occupation",
     "todaysRevenue": "Revenus du jour",
