@@ -216,7 +216,7 @@ const Chatbot = () => {
             className="flex items-center gap-2 rounded-full"
           >
             <Mic className="w-4 h-4" />
-            <span className="hidden sm:inline">Voice</span>
+            <span className="hidden sm:inline">Voice Call</span>
           </Button>
         </div>
       </motion.div>
